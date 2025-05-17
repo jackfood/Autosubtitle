@@ -1,4 +1,4 @@
-# Auto Subtitle GUI (Portable FFmpeg)
+# Auto Subtitle GUI (With FFmpeg and packages installed)
 
 This application provides a user-friendly graphical interface for automatically generating high-quality SRT subtitle files from video files. It leverages the power of OpenAI's cutting-edge Whisper model for transcription and translation, and includes all necessary components (Python environment, packages, and FFmpeg) for portability and ease of use.
 
