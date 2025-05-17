@@ -31,7 +31,7 @@ You simply unzip the package, run a setup script once, and then launch the GUI. 
 Follow these simple steps to get the application running:
 
 1.  **Download and Unzip:**
-    *   Download the application package (a zip file containing the `Python311` folder, etc.) from the provided Google Drive link: **https://drive.google.com/file/d/1N82xwGCTnaywauU1VKy0iHFICwA45P6i/view?usp=drive_link**
+    *   Download the application package (a zip file containing the `Python311` folder, etc.) from the provided Google Drive link: **https://drive.google.com/file/d/1N82xwGCTnaywauU1VKy0iHFICwA45P6i/view?usp=drive_link** (Zipped Version) **https://drive.google.com/drive/folders/1MPJKU_Aru1hTJNiYQSmFHZMtCH46lole?usp=drive_link** (Unzipped Version for viewing and inspection)
     *   Unzip the downloaded file to a desired location on your computer. Make sure you have enough disk space (the package itself, downloaded models, and output SRTs will consume space).
 
 2.  **Initialize/Update Virtual Environment:**
