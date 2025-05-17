@@ -1,4 +1,4 @@
-# Auto Subtitle GUI (With FFmpeg and packages installed)
+# Auto Subtitle GUI Fully Portable and Offline (With FFmpeg and packages installed)
 
 This application provides a user-friendly graphical interface for automatically generating high-quality SRT subtitle files from video files. It leverages the power of OpenAI's cutting-edge Whisper model for transcription and translation, and includes all necessary components (Python environment, packages, and FFmpeg) for portability and ease of use.
 
@@ -7,24 +7,6 @@ This application provides a user-friendly graphical interface for automatically 
 The Auto Subtitle GUI is designed to make the process of subtitling videos straightforward. Unlike traditional setups that might require installing Python, specific libraries, and FFmpeg system-wide and managing complex PATH configurations, this portable version bundles everything you need.
 
 You simply unzip the package, run a setup script once, and then launch the GUI. The application automatically handles the complexities of calling the Whisper model via the `auto-subtitle` script and using FFmpeg for audio extraction, ensuring a smooth workflow even without prior technical setup.
-
-## Key Features
-
-*   **Intuitive GUI:** A simple and clear interface for selecting files, choosing options, and monitoring progress.
-*   **Completely Portable:** The package includes a dedicated Python environment, pre-installed libraries, and a portable FFmpeg build. No system-level installations or modifications are necessary.
-*   **Self-Contained Environment:** Avoids conflicts with your system's Python or other installed software. Everything runs within the provided `Python311` folder.
-*   **Integrated FFmpeg:** A full, portable distribution of FFmpeg is included. This is essential for extracting audio from your video files before transcription.
-*   **Whisper Integration:** Utilizes the powerful Whisper model for highly accurate speech-to-text transcription (and translation if the underlying `auto-subtitle` script supports it via command-line arguments - note: this GUI is configured for transcription with language selection).
-*   **Model Selection:** Allows you to choose from various Whisper model sizes to balance speed, accuracy, and resource usage.
-*   **Intelligent Model Handling:** The `small.pt` model file is conveniently included in the distribution. Other models you select (like "medium" or "large") will be automatically downloaded by Whisper to its default cache location (typically within the application's `Scripts` folder) the first time they are required, simplifying setup for different model preferences.
-*   **Language Detection & Selection:** Choose to auto-detect the language or specify it for potentially faster and more accurate results.
-*   **Direct SRT Output:** Generates standard `.srt` subtitle files compatible with most video players and editing software.
-*   **Real-time Logging:** View detailed processing status and progress updates within the GUI's log area and, if launched from a terminal, directly in the console.
-
-## Credits
-
-*   This GUI application is built upon the excellent `auto-subtitle` command-line script, which handles the core integration with Whisper and FFmpeg. Many thanks to the original `auto-subtitle` project and its contributors: **[https://github.com/m1guelpf/auto-subtitle](https://github.com/m1guelpf/auto-subtitle)**
-*   Audio processing relies on the powerful FFmpeg multimedia framework. A portable distribution of FFmpeg is included in this package for your convenience.
 
 ## Setup and Running Instructions
 
@@ -53,6 +35,48 @@ Follow these simple steps to get the application running:
 *   **Choosing Options:** Select your desired Whisper model and the audio language. Choose the output folder for the SRT files.
 *   **Starting Processing:** Click "Start Processing". The log area will show progress.
 *   **Monitoring Progress:** The GUI's log window provides detailed output. If you ran `run.bat` from an existing command prompt, you will also see the progress printed there.
+
+## Model Downloading and Storage
+
+This application utilizes the Whisper model for speech-to-text transcription. The first time you run the application and select a model other than the pre-provided `small.pt`, it will need to download the model weights from the internet.
+
+### Internet Connection Requirement
+
+An internet connection is **required** for the initial download of any Whisper model you choose, *except* for the `small.pt` model if it is already present in the designated model cache directory.
+
+### Model Cache Location
+
+To ensure portability and keep the model files within your application's structure, the application is configured to store the downloaded Whisper models in a specific location relative to the script's directory.
+
+The model cache directory is set to:
+
+`[Your App_AutoSub Directory]/Scripts/models`
+
+When you select a model (e.g., "base", "medium", "large") for the first time, Whisper will automatically download the necessary files into this `.cache/whisper` directory. Subsequent uses of the same model will load the weights from this local cache, eliminating the need for further downloads.
+
+### Provided `small.pt` Model
+
+For convenience, a `small.pt` model file is expected to be included with the application distribution. If this file is placed in the `[Your App_AutoSub Directory]/Scripts/.cache/whisper` directory, selecting the "small" model will not require an internet connection for the initial load, as the model will be loaded directly from the provided file.
+
+If you choose a different model (e.g., "base", "medium"), it will be downloaded to the same `.cache/whisper` directory.
+
+## Key Features
+
+*   **Intuitive GUI:** A simple and clear interface for selecting files, choosing options, and monitoring progress.
+*   **Completely Portable:** The package includes a dedicated Python environment, pre-installed libraries, and a portable FFmpeg build. No system-level installations or modifications are necessary.
+*   **Self-Contained Environment:** Avoids conflicts with your system's Python or other installed software. Everything runs within the provided `Python311` folder.
+*   **Integrated FFmpeg:** A full, portable distribution of FFmpeg is included. This is essential for extracting audio from your video files before transcription.
+*   **Whisper Integration:** Utilizes the powerful Whisper model for highly accurate speech-to-text transcription (and translation if the underlying `auto-subtitle` script supports it via command-line arguments - note: this GUI is configured for transcription with language selection).
+*   **Model Selection:** Allows you to choose from various Whisper model sizes to balance speed, accuracy, and resource usage.
+*   **Intelligent Model Handling:** The `small.pt` model file is conveniently included in the distribution. Other models you select (like "medium" or "large") will be automatically downloaded by Whisper to its default cache location (typically within the application's `Scripts` folder) the first time they are required, simplifying setup for different model preferences.
+*   **Language Detection & Selection:** Choose to auto-detect the language or specify it for potentially faster and more accurate results.
+*   **Direct SRT Output:** Generates standard `.srt` subtitle files compatible with most video players and editing software.
+*   **Real-time Logging:** View detailed processing status and progress updates within the GUI's log area and, if launched from a terminal, directly in the console.
+
+## Credits
+
+*   This GUI application is built upon the excellent `auto-subtitle` command-line script, which handles the core integration with Whisper and FFmpeg. Many thanks to the original `auto-subtitle` project and its contributors: **[https://github.com/m1guelpf/auto-subtitle](https://github.com/m1guelpf/auto-subtitle)**
+*   Audio processing relies on the powerful FFmpeg multimedia framework. A portable distribution of FFmpeg is included in this package for your convenience.
 
 ## Additional Notes
 
