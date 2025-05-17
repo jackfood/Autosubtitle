@@ -20,14 +20,15 @@ Follow these simple steps to get the application running:
     *   Navigate into the main `Python311` folder that was created when you unzipped the package.
     *   Locate the batch file named `createNewEnv.bat`.
     *   **Double-click** this batch file.
-    *   A command prompt window will open and run. This script will ensure it updates the virtual environment to the correct directory and ensure all necessary Python packages (including `auto-subtitle`, `whisper`, `torch`, `torchaudio`, `numba`, `tqdm`, and `ffmpeg-python`) are correctly installed within this environment. **Note:** `torch` is installed with CPU support, making it broadly compatible with most Windows computers without requiring a specific graphics card.
-    *   **Wait for the script to finish.** The window will likely indicate completion or close automatically when done. This step requires an internet connection to download Python packages.
+    *   A command prompt window will open and run. This script will ensure it updates the virtual environment to the correct directory.
+    *   **Wait for the script to finish.** The window bat will close automatically when done.
 
 3.  **Run the Application:**
     *   Navigate to the `App_AutoSub\Scripts` folder located inside the `Python311` folder.
     *   Locate the batch file named `run.bat`.
     *   **Double-click** this batch file.
-    *   A command prompt window will briefly appear (it's used to activate the environment and launch the GUI), and then the "Auto Subtitle GUI (Portable FFmpeg)" application window will open.
+    *   A command prompt window will briefly appear, then the "Auto Subtitle GUI (Portable FFmpeg)" application window will open.
+    *   If you select other models size (except small), internet connection is **required**.
 
 ## Using the GUI
 
