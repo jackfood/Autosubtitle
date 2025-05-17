@@ -57,7 +57,7 @@ When you select a model (e.g., "base", "medium", "large") for the first time, Wh
 
 ### Provided `small.pt` Model
 
-For convenience, a `small.pt` model file is expected to be included with the application distribution. If this file is placed in the `[Your App_AutoSub Directory]/Scripts/.cache/whisper` directory, selecting the "small" model will not require an internet connection for the initial load, as the model will be loaded directly from the provided file.
+For convenience, a `small.pt` model file is expected to be included with the application distribution. If this file is placed in the `[Your App_AutoSub Directory]/Scripts/models` directory, selecting the "small" model will not require an internet connection for the initial load, as the model will be loaded directly from the provided file.
 
 If you choose a different model (e.g., "base", "medium"), it will be downloaded to the same `models` directory.
 
