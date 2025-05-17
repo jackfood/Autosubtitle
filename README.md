@@ -77,7 +77,7 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 ## Credits
 
 *   This GUI application is built upon the excellent `auto-subtitle` command-line script, which handles the core integration with Whisper and FFmpeg. Many thanks to the original `auto-subtitle` project and its contributors: **[https://github.com/m1guelpf/auto-subtitle](https://github.com/m1guelpf/auto-subtitle)**
-*   Audio processing relies on the powerful FFmpeg multimedia framework. A portable distribution of FFmpeg is included in this package for your convenience.
+*   Audio processing relies on the powerful FFmpeg multimedia framework. A portable distribution of FFmpeg is included in this package for your convenience. **[https://ffmpeg.org/]**
 
 ## Additional Notes
 
