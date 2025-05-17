@@ -53,7 +53,7 @@ The model cache directory is set to:
 
 `[Your App_AutoSub Directory]/Scripts/models`
 
-When you select a model (e.g., "base", "medium", "large") for the first time, Whisper will automatically download the necessary files into this `.cache/whisper` directory. Subsequent uses of the same model will load the weights from this local cache, eliminating the need for further downloads.
+When you select a model (e.g., "base", "medium", "large") for the first time, Whisper will automatically download the necessary files into this `models` directory. Subsequent uses of the same model will load the weights from this local 'models' cache, eliminating the need for further downloads.
 
 ### Provided `small.pt` Model
 
