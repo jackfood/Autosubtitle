@@ -38,7 +38,7 @@ Follow these simple steps to get the application running:
     *   Navigate into the main `Python311` folder that was created when you unzipped the package.
     *   Locate the batch file named `createNewEnv.bat`.
     *   **Double-click** this batch file.
-    *   A command prompt window will open. This script will set up or update the dedicated Python virtual environment and ensure all necessary Python packages (including `auto-subtitle`, `whisper`, `torch`, `torchaudio`, `numba`, `tqdm`, and `ffmpeg-python`) are correctly installed within this environment. **Note:** `torch` is installed with CPU support, making it broadly compatible with most Windows computers without requiring a specific graphics card.
+    *   A command prompt window will open and run. This script will ensure it updates the virtual environment to the correct directory and ensure all necessary Python packages (including `auto-subtitle`, `whisper`, `torch`, `torchaudio`, `numba`, `tqdm`, and `ffmpeg-python`) are correctly installed within this environment. **Note:** `torch` is installed with CPU support, making it broadly compatible with most Windows computers without requiring a specific graphics card.
     *   **Wait for the script to finish.** The window will likely indicate completion or close automatically when done. This step requires an internet connection to download Python packages.
 
 3.  **Run the Application:**
