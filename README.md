@@ -45,7 +45,7 @@ This application utilizes the Whisper model for speech-to-text transcription. Th
 
 ### Internet Connection Requirement
 
-An internet connection is **required** for the initial download of any Whisper model you choose, *except* for the `small.pt` model if it is already present in the designated model cache directory.
+An internet connection is **required** for the **initial** download of any Whisper model you choose, *except* for the `small.pt` model if it is already present in the designated model cache directory.
 
 ### Model Cache Location
 
