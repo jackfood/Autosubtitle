@@ -1,4 +1,4 @@
-# Auto Subtitle GUI Fully Portable and Offline (With FFmpeg and packages installed)
+# Auto Subtitle GUI Fully Portable and Offline V1.02 (With FFmpeg and packages installed)
 
 This application provides a user-friendly graphical interface for automatically generating high-quality SRT subtitle files from video files. It leverages the power of OpenAI's cutting-edge Whisper model for transcription and translation, and includes all necessary components (Python environment, packages, and FFmpeg) for portability and ease of use.
 
@@ -85,3 +85,6 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 *   **GPU (Optional):** This package does *not* include the necessary CUDA-enabled `torch` binaries or require a GPU. If you need faster performance and have an NVIDIA GPU, you would need to manually install a CUDA-compatible version of `torch` into the virtual environment after running `createNewEnv.bat`, following the instructions on the PyTorch website.
 *   **Model Downloads:** The `small.pt` model is included. If you use a different model size for the first time, it will be downloaded automatically by the `whisper` library. Download size varies by model (e.g., `medium` is several GB, `large-v3` is larger). Ensure you have sufficient disk space and an internet connection.
 *   **Output Files:** The generated `.srt` files will be named the same as the input video file (e.g., `myvideo.mp4` will produce `myvideo.srt`). You can select the output location of the generated `srt`.
+
+## Updates Log
+*   **V1.02** Added - Silent Thresholds options, merge duplicate subtitle along same segment
