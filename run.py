@@ -15,7 +15,9 @@ PYTHON_EXECUTABLE = os.path.join(VENV_SCRIPTS_DIR, "python.exe")
 
 AVAILABLE_MODELS_FROM_IMAGE = [
     "tiny.en", "tiny", "base.en", "base", "small.en", "small",
-    "medium.en", "medium", "large-v1", "large-v2", "large-v3", "large-v3-turbo"
+    "medium.en", "medium", "large-v1", "large-v2", "large-v3" 
+    # "large-v3-turbo" might not be a standard model name for local whisper,
+    # usually refers to API. Let's stick to known local model names.
 ]
 DEFAULT_MODEL = "small"
 
@@ -29,6 +31,7 @@ LANGUAGES_MAP = {
     "Swedish": "sv", "Thai": "th", "Vietnamese": "vi"
 }
 DEFAULT_LANGUAGE_DISPLAY_NAME = "English"
+DEFAULT_NO_SPEECH_THRESHOLD = "0.6" # Default for the GUI
 
 DEFAULT_OUTPUT_DIR = os.path.join(os.path.expanduser("~"), "Desktop")
 
@@ -37,7 +40,7 @@ class SubtitleApp:
     def __init__(self, master):
         self.master = master
         master.title("Auto Subtitle GUI (Portable FFmpeg)")
-        master.geometry("700x650")
+        master.geometry("700x700") # Increased height slightly for the new option
 
         self.video_files = []
 
@@ -61,7 +64,7 @@ class SubtitleApp:
         elif AVAILABLE_MODELS_FROM_IMAGE:
             self.model_var.set(AVAILABLE_MODELS_FROM_IMAGE[0])
         else:
-            self.model_var.set("small")
+            self.model_var.set("small") # Fallback if list is empty for some reason
         self.model_dropdown = ttk.Combobox(options_frame, textvariable=self.model_var,
                                            values=AVAILABLE_MODELS_FROM_IMAGE, state="readonly", width=25)
         self.model_dropdown.grid(row=0, column=1, sticky=tk.EW, padx=5, pady=2)
@@ -74,14 +77,25 @@ class SubtitleApp:
                                               values=list(LANGUAGES_MAP.keys()), state="readonly", width=25)
         self.language_dropdown.grid(row=1, column=1, sticky=tk.EW, padx=5, pady=2)
 
+        no_speech_label = tk.Label(options_frame, text="No Speech Threshold:")
+        no_speech_label.grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        self.no_speech_threshold_var = tk.StringVar(master)
+        self.no_speech_threshold_var.set(DEFAULT_NO_SPEECH_THRESHOLD)
+        self.no_speech_threshold_entry = tk.Entry(options_frame, textvariable=self.no_speech_threshold_var, width=10)
+        self.no_speech_threshold_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=2) # sticky W to align with dropdowns
+        no_speech_tooltip = tk.Label(options_frame, text="(0.0-1.0, e.g., 0.6)", fg="grey")
+        no_speech_tooltip.grid(row=2, column=1, sticky=tk.W, padx=(self.no_speech_threshold_entry.winfo_reqwidth() + 15, 0), pady=2)
+
+
         output_dir_label = tk.Label(options_frame, text="SRT Output Dir:")
-        output_dir_label.grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        output_dir_label.grid(row=3, column=0, sticky=tk.W, padx=5, pady=2) # Adjusted row
         self.output_dir_var = tk.StringVar(master)
         self.output_dir_var.set(DEFAULT_OUTPUT_DIR)
         self.output_dir_entry = tk.Entry(options_frame, textvariable=self.output_dir_var, state="readonly", width=40)
-        self.output_dir_entry.grid(row=2, column=1, sticky=tk.EW, padx=5, pady=2)
+        self.output_dir_entry.grid(row=3, column=1, sticky=tk.EW, padx=5, pady=2) # Adjusted row
         self.output_dir_button = tk.Button(options_frame, text="Browse...", command=self.select_output_dir)
-        self.output_dir_button.grid(row=2, column=2, sticky=tk.EW, padx=5, pady=2)
+        self.output_dir_button.grid(row=3, column=2, sticky=tk.EW, padx=5, pady=2) # Adjusted row
+        
         options_frame.columnconfigure(1, weight=1)
 
         self.file_listbox_label = tk.Label(master, text="Selected Files:")
@@ -126,9 +140,10 @@ class SubtitleApp:
         else:
             self.log_message(f"INFO: Using portable FFMPEG executable from: {FFMPEG_EXECUTABLE_PATH}", "green")
             ffmpeg_bin_dir = os.path.dirname(FFMPEG_EXECUTABLE_PATH)
-            dll_found = any(f.lower().endswith('.dll') for f in os.listdir(ffmpeg_bin_dir))
-            if not dll_found:
-                 self.log_message(f"WARNING: Portable FFmpeg directory ({ffmpeg_bin_dir}) does not appear to contain DLLs. It might not work.", "orange")
+            # Simple DLL check might not be robust, but it's a hint.
+            # dll_found = any(f.lower().endswith('.dll') for f in os.listdir(ffmpeg_bin_dir))
+            # if not dll_found:
+            #      self.log_message(f"WARNING: Portable FFmpeg directory ({ffmpeg_bin_dir}) does not appear to contain DLLs. It might not work as expected.", "orange")
 
         self.log_message(f"INFO: Whisper model cache root directory set to: {MODEL_CACHE_ROOT_DIR}. Whisper will create a 'whisper' subdirectory here.", "blue")
 
@@ -150,7 +165,7 @@ class SubtitleApp:
             self.log_text.config(state=tk.NORMAL)
             msg_str = str(message)
             if color:
-                tag_name = f"color_{color.replace(' ', '_').replace(':', '')}"
+                tag_name = f"color_{color.replace(' ', '_').replace(':', '')}" # Basic tag name generation
                 self.log_text.tag_configure(tag_name, foreground=color)
                 self.log_text.insert(tk.END, msg_str + ("" if no_newline else "\n"), tag_name)
             else:
@@ -162,7 +177,7 @@ class SubtitleApp:
     def select_files(self):
         files = filedialog.askopenfilenames(
             title="Select Video Files",
-            filetypes=(("Video files", "*.avi *.mp4 *.mkv *.mov *.webm *.mpg"), ("All files", "*.*"))
+            filetypes=(("Video files", "*.avi *.mp4 *.mkv *.mov *.webm *.mpg *.flv *.wmv"), ("All files", "*.*"))
         )
         if files:
             for f_path in files:
@@ -183,11 +198,14 @@ class SubtitleApp:
     def set_ui_state(self, state):
         element_state = tk.NORMAL if state == "normal" else tk.DISABLED
         combobox_state = "readonly" if state == "normal" else tk.DISABLED
+        entry_state = tk.NORMAL if state == "normal" else tk.DISABLED # For regular entries like threshold
 
         self.select_button.config(state=element_state)
         self.clear_button.config(state=element_state)
         self.start_button.config(state=element_state)
         self.output_dir_button.config(state=element_state)
+        self.no_speech_threshold_entry.config(state=entry_state)
+
 
         self.model_dropdown.config(state=combobox_state)
         self.language_dropdown.config(state=combobox_state)
@@ -200,6 +218,18 @@ class SubtitleApp:
         if not os.path.isfile(FFMPEG_EXECUTABLE_PATH):
             messagebox.showerror("FFmpeg Error", f"Portable FFmpeg executable not found at:\n{FFMPEG_EXECUTABLE_PATH}\nCannot proceed.")
             return
+        
+        try:
+            # Validate no_speech_threshold
+            no_speech_val_str = self.no_speech_threshold_var.get()
+            no_speech_val_float = float(no_speech_val_str)
+            if not (0.0 <= no_speech_val_float <= 1.0):
+                messagebox.showerror("Invalid Input", "No Speech Threshold must be a number between 0.0 and 1.0.")
+                return
+        except ValueError:
+            messagebox.showerror("Invalid Input", "No Speech Threshold must be a valid number (e.g., 0.6).")
+            return
+
 
         self.set_ui_state("disabled")
         self.log_message("Starting sequential video processing...", "blue")
@@ -215,171 +245,191 @@ class SubtitleApp:
         all_successful = True
 
         try:
-            self.log_message(f"Changing working directory to: {VENV_SCRIPTS_DIR}")
-            print(f"Changing working directory to: {VENV_SCRIPTS_DIR}")
-            os.chdir(VENV_SCRIPTS_DIR)
-            self.log_message(f"Current working directory: {os.getcwd()}")
-            print(f"Current working directory: {os.getcwd()}")
+            # No need to chdir if PYTHON_EXECUTABLE is absolute and cli.py is called with -m module.submodule
+            # os.chdir(VENV_SCRIPTS_DIR)
+            self.log_message(f"INFO: Script execution directory (cwd for subprocess): {VENV_SCRIPTS_DIR}", "gray")
+            # print(f"Current working directory: {os.getcwd()}")
         except Exception as e:
-            self.log_message(f"ERROR: Could not change directory to '{VENV_SCRIPTS_DIR}': {e}", "red")
-            print(f"ERROR: Could not change directory to '{VENV_SCRIPTS_DIR}': {e}")
+            self.log_message(f"ERROR: Problem related to working directory '{VENV_SCRIPTS_DIR}': {e}", "red")
+            # print(f"ERROR: Could not change directory to '{VENV_SCRIPTS_DIR}': {e}")
             self.master.after(0, self._processing_finished, False)
             return
 
         selected_model_name = self.model_var.get()
         selected_lang_code = LANGUAGES_MAP.get(self.language_var.get(), "en")
         output_directory = self.output_dir_var.get()
+        no_speech_threshold_setting = self.no_speech_threshold_var.get()
+
 
         if not os.path.isdir(output_directory):
             try:
                 os.makedirs(output_directory, exist_ok=True)
                 self.log_message(f"Created output directory: {output_directory}", "green")
-                print(f"Created output directory: {output_directory}")
+                # print(f"Created output directory: {output_directory}")
             except Exception as e:
                 self.log_message(f"ERROR: Could not create output directory {output_directory}: {e}", "red")
-                print(f"ERROR: Could not create output directory {output_directory}: {e}")
+                # print(f"ERROR: Could not create output directory {output_directory}: {e}")
                 all_successful = False
 
         if all_successful:
             num_files = len(self.video_files)
             for i, video_file_path in enumerate(self.video_files):
                 self.log_message(f"\nProcessing file {i+1}/{num_files}: {os.path.basename(video_file_path)}", "blue")
-                print(f"\nProcessing file {i+1}/{num_files}: {os.path.basename(video_file_path)}")
+                # print(f"\nProcessing file {i+1}/{num_files}: {os.path.basename(video_file_path)}")
 
                 command = [
                     PYTHON_EXECUTABLE,
-                    "-u",
-                    "-m", "auto_subtitle.cli",
+                    "-u", # Unbuffered output
+                    "-m", "auto_subtitle.cli", # Run as module
                     video_file_path,
                     "--model", selected_model_name,
                     "--language", selected_lang_code,
                     "--output_dir", output_directory,
-                    "--srt_only", "True",
-                    "--output_srt", "True",
-                    "--verbose", "True",
+                    "--srt_only", "True", # Always True for this GUI
+                    "--output_srt", "True", # Also True to ensure SRT is in output_dir
+                    "--verbose", "True", # Enable verbose CLI output for logging
                     "--ffmpeg_executable_path", FFMPEG_EXECUTABLE_PATH,
-                    "--model_download_root", MODEL_CACHE_ROOT_DIR
+                    "--model_download_root", MODEL_CACHE_ROOT_DIR,
+                    "--no_speech_threshold", no_speech_threshold_setting
                 ]
 
                 command_str = ' '.join(f'"{arg}"' if ' ' in arg else arg for arg in command)
                 self.log_message(f"Executing: {command_str}")
-                print(f"Executing: {command_str}")
+                # print(f"Executing: {command_str}")
 
                 try:
                     process_flags = 0
-                    if os.name == 'nt':
+                    if os.name == 'nt': # Windows
                         process_flags = subprocess.CREATE_NO_WINDOW
 
                     process_env = os.environ.copy()
+                    # Ensure ffmpeg's directory is in PATH for the subprocess,
+                    # especially if ffmpeg relies on DLLs in its own directory.
                     ffmpeg_bin_dir = os.path.dirname(FFMPEG_EXECUTABLE_PATH)
-
+                    
+                    # Add ffmpeg_bin_dir to the beginning of PATH for the subprocess
                     if "PATH" in process_env:
                         process_env["PATH"] = ffmpeg_bin_dir + os.pathsep + process_env["PATH"]
                     else:
                         process_env["PATH"] = ffmpeg_bin_dir
+                    
+                    self.log_message(f"DEBUG: Subprocess PATH will be prepended with: {ffmpeg_bin_dir}", "gray")
 
-                    self.log_message(f"DEBUG: Subprocess PATH will be prepended with: {ffmpeg_bin_dir}.", "gray")
 
                     process = subprocess.Popen(
                         command,
                         stdout=subprocess.PIPE,
-                        stderr=subprocess.STDOUT,
-                        text=True,
-                        bufsize=1,
-                        cwd=VENV_SCRIPTS_DIR,
+                        stderr=subprocess.STDOUT, # Redirect stderr to stdout
+                        text=True, # Decodes output as text
+                        bufsize=1, # Line buffered
+                        cwd=VENV_SCRIPTS_DIR, # CWD for the subprocess where python -m auto_subtitle is run
                         creationflags=process_flags,
-                        encoding='utf-8', errors='replace',
+                        encoding='utf-8', errors='replace', # Ensure proper encoding
                         env=process_env
                     )
 
+                    # Read output line by line
                     for raw_line_from_process in iter(process.stdout.readline, ''):
-                        line_content = raw_line_from_process.rstrip('\n')
+                        line_content = raw_line_from_process.rstrip('\n') # Remove trailing newline
 
-                        parts = line_content.split('\r')
+                        # Handle carriage returns if present (common in progress bars)
+                        parts = line_content.split('\r') # Split by carriage return
 
                         for part_idx, part_content in enumerate(parts):
-                            if part_content:
-                                self.log_message(part_content)
+                            if part_content: # If there's actual content
+                                self.log_message(part_content) # Log each part
+                                
+                                # Optional: print to console as well, trying to mimic `\r` behavior
+                                # if '\r' in line_content and part_idx < len(parts) - 1:
+                                #     print(part_content, end='\r', flush=True)
+                                # else:
+                                #     print(part_content, flush=True)
 
-                                if '\r' in line_content and part_idx < len(parts) - 1:
-                                    print(part_content, end='\r', flush=True)
-                                else:
-                                    print(part_content, flush=True)
 
-                    process.stdout.close()
-                    return_code = process.wait()
+                    process.stdout.close() # Close the stdout stream
+                    return_code = process.wait() # Wait for the process to complete
 
                     if return_code == 0:
                         msg_success = f"Successfully processed {os.path.basename(video_file_path)}."
                         self.log_message(msg_success, "green")
-                        print(msg_success)
+                        # print(msg_success)
                     else:
-                        msg_error = f"ERROR processing {os.path.basename(video_file_path)}. Return code: {return_code}"
+                        msg_error = f"ERROR processing {os.path.basename(video_file_path)}. CLI script returned code: {return_code}"
                         self.log_message(msg_error, "red")
-                        print(msg_error)
+                        # print(msg_error)
                         all_successful = False
                 except FileNotFoundError:
-                    msg_fnf = f"ERROR: Command not found. Ensure Python executable ({PYTHON_EXECUTABLE}) is correct and 'auto_subtitle.cli' is accessible."
+                    msg_fnf = f"ERROR: Command not found. Ensure Python executable ({PYTHON_EXECUTABLE}) is correct and 'auto_subtitle.cli' is accessible via -m."
                     self.log_message(msg_fnf, "red")
-                    print(msg_fnf)
+                    # print(msg_fnf)
                     all_successful = False
-                    break
+                    break # Stop processing further files if a fundamental command is not found
                 except Exception as e:
-                    msg_exc = f"An unexpected error occurred with {os.path.basename(video_file_path)}: {e}"
+                    msg_exc = f"An unexpected error occurred while processing {os.path.basename(video_file_path)}: {e}"
                     self.log_message(msg_exc, "red")
-                    print(msg_exc)
+                    # print(msg_exc)
                     all_successful = False
 
                 self.log_message("--------------------------------------------------")
-                print("--------------------------------------------------")
+                # print("--------------------------------------------------")
 
-        else:
+        else: # if not all_successful (due to output directory issue initially)
              msg_halt = "Processing halted due to output directory issue."
              self.log_message(msg_halt, "red")
-             print(msg_halt)
+             # print(msg_halt)
 
-        try:
-            os.chdir(original_cwd)
-            msg_restore_wd = f"Restored working directory to: {os.getcwd()}"
-            self.log_message(msg_restore_wd)
-            print(msg_restore_wd)
-        except Exception as e:
-             msg_err_restore = f"Error restoring working directory: {e}"
-             self.log_message(msg_err_restore, "orange")
-             print(msg_err_restore)
+        # Restore original CWD if it was changed (though current logic avoids chdir)
+        # if os.getcwd() != original_cwd:
+        #     try:
+        #         os.chdir(original_cwd)
+        #         msg_restore_wd = f"Restored working directory to: {os.getcwd()}"
+        #         self.log_message(msg_restore_wd)
+        #         # print(msg_restore_wd)
+        #     except Exception as e:
+        #          msg_err_restore = f"Error restoring working directory: {e}"
+        #          self.log_message(msg_err_restore, "orange")
+                 # print(msg_err_restore)
 
         self.master.after(0, self._processing_finished, all_successful)
 
     def _processing_finished(self, success_flag=True):
         self.log_message("==================================================", "blue")
-        print("==================================================")
-        if success_flag and self.video_files:
-            self.log_message("Sequential processing finished.", "green")
-            print("Sequential processing finished.")
+        # print("==================================================")
+        if success_flag and self.video_files: # If all files attempted were successful
+            self.log_message("Sequential processing finished successfully.", "green")
+            # print("Sequential processing finished successfully.")
             messagebox.showinfo("Complete", "All selected videos have been processed.")
-        elif not self.video_files:
+        elif not self.video_files: # If no files were selected in the first place
              self.log_message("No files were selected for processing.", "orange")
-             print("No files were selected for processing.")
-        else:
+             # print("No files were selected for processing.")
+        else: # If some files failed or processing was halted
             self.log_message("Processing finished with errors or some files were not processed.", "red")
-            print("Processing finished with errors or some files were not processed.")
-            messagebox.showerror("Error / Incomplete", "Processing encountered errors or did not complete successfully for all files. Check logs.")
+            # print("Processing finished with errors or some files were not processed.")
+            messagebox.showerror("Error / Incomplete", "Processing encountered errors or did not complete successfully for all files. Check logs for details.")
 
         self.set_ui_state("normal")
 
 
 if __name__ == "__main__":
+    # Basic check for VENV_SCRIPTS_DIR, essential for PYTHON_EXECUTABLE and module path
     if not os.path.isdir(VENV_SCRIPTS_DIR):
-        print(f"CRITICAL ERROR: VENV_SCRIPTS_DIR does not exist: {VENV_SCRIPTS_DIR}")
-        print("The application cannot start. Please ensure the script is in your venv's Scripts directory.")
+        error_message = (f"CRITICAL ERROR: The expected script directory does not exist:\n{VENV_SCRIPTS_DIR}\n\n"
+                         "This application expects to be run from a specific directory structure, typically within a "
+                         "Python virtual environment's 'Scripts' (Windows) or 'bin' (Unix-like) directory, "
+                         "or a portable distribution where 'python.exe' and the 'auto_subtitle' package are correctly located relative to this GUI script.\n\n"
+                         "Please ensure the application's file structure is correct.")
+        print(error_message) # Print to console for non-GUI environments or if Tk fails
         try:
+            # Attempt to show a Tkinter error message if Tkinter is available
             root_check = tk.Tk()
-            root_check.withdraw()
-            messagebox.showerror("Startup Error", f"CRITICAL ERROR: VENV_SCRIPTS_DIR does not exist:\n{VENV_SCRIPTS_DIR}\n\nPlease ensure this script is located in the 'Scripts' directory of your Python virtual environment.")
+            root_check.withdraw() # Hide the main Tk window
+            messagebox.showerror("Startup Error", error_message)
             root_check.destroy()
         except tk.TclError:
-            pass
-        exit(1)
+            # If Tkinter itself fails (e.g., no display), the console message is the fallback
+            pass 
+        sys.exit(1)
+
 
     root = tk.Tk()
     app = SubtitleApp(root)
