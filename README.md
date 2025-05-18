@@ -15,7 +15,7 @@ You simply unzip the package, run a setup script once, and then launch the GUI. 
 Follow these simple steps to get the application running:
 
 1.  **Download and Unzip:**
-    *   Download the application package (a zip file containing the `Python311` folder, etc.) from the provided Google Drive link: **https://drive.google.com/file/d/13Wb7Nl4ZfD_ypKmlCl_nPF20JLcr2Ano/view?usp=drive_link** (Zipped Version) **https://drive.google.com/drive/folders/1MPJKU_Aru1hTJNiYQSmFHZMtCH46lole?usp=drive_link** (Unzipped Version for viewing and inspection)
+    *   Download the application package (a zip file containing the `Python311` folder, etc.) from the provided Google Drive link: **https://drive.google.com/drive/u/2/folders/1Ce7ZHvxy2O710fm4rkg-u-yPKC1Te1Dv** (Zipped AutoSubtitle Version with seperate models) **https://drive.google.com/drive/folders/1MPJKU_Aru1hTJNiYQSmFHZMtCH46lole?usp=drive_link** (Unzipped Version for viewing and inspection)
     *   Unzip the downloaded file to a desired location on your computer. Make sure you have enough disk space (the package itself, downloaded models, and output SRTs will consume space).
 
 2.  **Initialize/Update Virtual Environment:**
