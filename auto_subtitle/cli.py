@@ -32,7 +32,7 @@ def main():
     parser.add_argument("--srt_only", type=str2bool, default=False,
                         help="only generate the .srt file and not create overlayed video")
     parser.add_argument("--verbose", type=str2bool, default=False,
-                        help="whether to print out the progress and debug messages")
+                        help="whether to print out the progress and debug messages for this script's operations")
 
     parser.add_argument("--task", type=str, default="transcribe", choices=[
                         "transcribe", "translate"], help="whether to perform X->X speech recognition ('transcribe') or X->English translation ('translate')")
@@ -45,29 +45,49 @@ def main():
     parser.add_argument("--model_download_root", type=str, default=None,
                         help="Optional root directory for Whisper model cache. Whisper will create a 'whisper' subdir here.")
 
+    parser.add_argument("--no_speech_threshold", type=float, default=0.6,
+                        help="Threshold for no speech probability. Segments with no_speech_prob above this value will be skipped. Range 0.0-1.0. Default is 0.6.")
 
-    args = parser.parse_args().__dict__
-    model_name: str = args.pop("model")
-    output_dir: str = args.pop("output_dir")
-    output_srt: bool = args.pop("output_srt")
-    srt_only: bool = args.pop("srt_only")
-    language: str = args.pop("language")
-    ffmpeg_exec_path: str = args.pop("ffmpeg_executable_path")
-    model_download_root_path: Optional[str] = args.pop("model_download_root")
+    args_dict = parser.parse_args().__dict__
+    model_name: str = args_dict.pop("model")
+    output_dir: str = args_dict.pop("output_dir")
+    output_srt: bool = args_dict.pop("output_srt")
+    srt_only: bool = args_dict.pop("srt_only")
+    language: str = args_dict.pop("language")
+    ffmpeg_exec_path: str = args_dict.pop("ffmpeg_executable_path")
+    model_download_root_path: Optional[str] = args_dict.pop("model_download_root")
+    
+    no_speech_threshold_value: float = args_dict.pop("no_speech_threshold")
+    # The 'verbose' argument from argparse is for Whisper's internal progress.
+    # We'll use it also for our script's verbose logging.
+    script_verbose_logging: bool = args_dict.get("verbose", False)
+
 
     os.makedirs(output_dir, exist_ok=True)
+
+    # All remaining args in args_dict are intended for whisper.transcribe
+    transcribe_options = args_dict 
 
     if model_name.endswith(".en"):
         warnings.warn(
             f"{model_name} is an English-only model, forcing English detection.")
-        args["language"] = "en"
+        transcribe_options["language"] = "en"
     elif language != "auto":
-        args["language"] = language
+        transcribe_options["language"] = language
+    # If language is "auto", it's not explicitly set in transcribe_options,
+    # allowing Whisper to perform auto-detection.
+
 
     model = whisper.load_model(model_name, download_root=model_download_root_path)
-    audios = get_audio(args.pop("video"), ffmpeg_exec_path)
+    audios = get_audio(transcribe_options.pop("video"), ffmpeg_exec_path) #.pop("video") from transcribe_options as it's not a whisper.transcribe arg
+    
     subtitles = get_subtitles(
-        audios, output_srt or srt_only, output_dir, lambda audio_path: model.transcribe(audio_path, **args)
+        audios, 
+        output_srt or srt_only, 
+        output_dir, 
+        lambda audio_path: model.transcribe(audio_path, **transcribe_options),
+        no_speech_threshold_value,
+        script_verbose_logging
     )
 
     if srt_only:
@@ -81,11 +101,14 @@ def main():
         video = ffmpeg.input(path)
         audio = video.audio
 
-        ffmpeg.concat(
-            video.filter('subtitles', srt_path, force_style="OutlineColour=&H40000000,BorderStyle=3"), audio, v=1, a=1
-        ).output(out_path).run(cmd=ffmpeg_exec_path, quiet=True, overwrite_output=True)
-
-        print(f"Saved subtitled video to {os.path.abspath(out_path)}.")
+        try:
+            ffmpeg.concat(
+                video.filter('subtitles', srt_path, force_style="OutlineColour=&H40000000,BorderStyle=3"), audio, v=1, a=1
+            ).output(out_path).run(cmd=ffmpeg_exec_path, quiet=not script_verbose_logging, overwrite_output=True)
+            print(f"Saved subtitled video to {os.path.abspath(out_path)}.")
+        except ffmpeg.Error as e:
+            print(f"Error during FFmpeg processing for {filename(path)}: {e.stderr.decode('utf8') if e.stderr else str(e)}", file=sys.stderr, flush=True)
+            print(f"Failed to add subtitles to {filename(path)}. SRT file is available at: {srt_path}", file=sys.stderr, flush=True)
 
 
 def get_audio(paths, ffmpeg_cmd="ffmpeg"):
@@ -96,17 +119,22 @@ def get_audio(paths, ffmpeg_cmd="ffmpeg"):
         print(f"Extracting audio from {filename(path)}...")
         output_path = os.path.join(temp_dir, f"{filename(path)}.wav")
 
-        ffmpeg.input(path).output(
-            output_path,
-            acodec="pcm_s16le", ac=1, ar="16k"
-        ).run(cmd=ffmpeg_cmd, quiet=True, overwrite_output=True)
-
-        audio_paths[path] = output_path
-
+        try:
+            ffmpeg.input(path).output(
+                output_path,
+                acodec="pcm_s16le", ac=1, ar="16k"
+            ).run(cmd=ffmpeg_cmd, quiet=True, overwrite_output=True)
+            audio_paths[path] = output_path
+        except ffmpeg.Error as e:
+            print(f"Error extracting audio from {filename(path)}: {e.stderr.decode('utf8') if e.stderr else str(e)}", file=sys.stderr, flush=True)
+            # Decide if you want to skip this file or halt. Here, we'll skip.
+            continue 
+            
     return audio_paths
 
 
-def get_subtitles(audio_paths: list, output_srt: bool, output_dir: str, transcribe: callable):
+def get_subtitles(audio_paths: dict, output_srt: bool, output_dir: str, transcribe: callable, 
+                  no_speech_thresh: float, script_verbose: bool):
     subtitles_path = {}
 
     for path, audio_path in audio_paths.items():
@@ -121,8 +149,29 @@ def get_subtitles(audio_paths: list, output_srt: bool, output_dir: str, transcri
         result = transcribe(audio_path)
         warnings.filterwarnings("default")
 
+        all_segments = result.get("segments", [])
+        speech_segments = []
+
+        for segment in all_segments:
+            segment_no_speech_prob = segment.get("no_speech_prob", 0.0)
+            if segment_no_speech_prob < no_speech_thresh:
+                speech_segments.append(segment)
+            else:
+                if script_verbose:
+                    text_preview = segment.get('text', '').strip()
+                    if len(text_preview) > 30: text_preview = text_preview[:27] + "..."
+                    print(f"INFO: Skipping segment ({segment['start']:.2f}s-{segment['end']:.2f}s) for '{filename(path)}' due to no_speech_prob: {segment_no_speech_prob:.2f} >= threshold {no_speech_thresh:.2f}. Text: '{text_preview}'", flush=True)
+        
+        if not speech_segments and all_segments:
+             if script_verbose:
+                print(f"INFO: All segments for '{filename(path)}' were filtered out by no-speech threshold. Original subtitle would have content.", flush=True)
+        elif not all_segments:
+            if script_verbose:
+                print(f"INFO: No segments transcribed for '{filename(path)}' by Whisper.", flush=True)
+
+
         with open(srt_path, "w", encoding="utf-8") as srt:
-            write_srt(result["segments"], file=srt)
+            write_srt(speech_segments, file=srt)
 
         subtitles_path[path] = srt_path
 
