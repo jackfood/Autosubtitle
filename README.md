@@ -96,3 +96,42 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 -- CPU Workers Option: Added a "CPU Workers (VAD Chunks)" option allowing users to specify the number of CPU cores to use for VAD-based transcription. Set to 0 for automatic detection (uses all available cores), 1 for serial processing, or a specific number up to your system's core count.
 -- Dynamic UI: VAD-specific options (VAD Threshold, Min Speech, Min Silence, and CPU Workers) are now automatically shown when "Use Voice Activity Detection (VAD)" is checked and hidden when it's unchecked, simplifying the interface.
 -- Enhanced Logging: Added more detailed logging for VAD processing when using multiple workers, providing better visibility into the progress of individual transcription tasks.
+
+## Credits and Used Libraries
+
+This project is built upon the fantastic work of others. We extend our sincere thanks to the developers and communities behind the following key packages:
+
+*   **OpenAI Whisper:**
+    *   The core of the transcription functionality is powered by OpenAI's state-of-the-art Whisper model.
+    *   Credit: OpenAI (https://github.com/openai/whisper)
+    *   Role: Performs the heavy lifting of speech-to-text conversion.
+
+*   **Silero VAD:**
+    *   For Voice Activity Detection (VAD), which helps segment audio into speech and non-speech parts before transcription, we use the Silero VAD model.
+    *   Credit: Silero Team (https://github.com/snakers4/silero-vad)
+    *   Role: Detects speech segments in audio to optimize transcription, especially when using multiple CPU workers.
+
+*   **FFmpeg:**
+    *   Essential for extracting audio streams from various video formats and for embedding the generated subtitles back into the video files (if that option is used).
+    *   Credit: The FFmpeg team and contributors (https://ffmpeg.org/)
+    *   Role: Handles all underlying audio and video stream manipulation. This application uses a portable FFmpeg binary.
+
+*   **PyTorch:**
+    *   Both OpenAI Whisper and Silero VAD are deep learning models that rely on the PyTorch framework for their execution.
+    *   Credit: PyTorch Team (https://pytorch.org/)
+    *   Role: Provides the foundation for running the neural network models.
+
+*   **NumPy:**
+    *   A fundamental package for numerical computation in Python, widely used by PyTorch and other scientific libraries.
+    *   Credit: The NumPy community (https://numpy.org/)
+    *   Role: Provides efficient array operations used in data handling for the models.
+
+*   **soundfile & torchaudio:**
+    *   These libraries are used by the VAD functionality for robust loading and handling of audio files.
+    *   Credit: soundfile (https://github.com/bastibe/python-soundfile), torchaudio (https://github.com/pytorch/audio)
+    *   Role: Facilitate reading and processing audio data for VAD analysis.
+
+*   **Python `tkinter`:**
+    *   The graphical user interface itself is built using Python's standard `tkinter` library and its themed widget extension `ttk`.
+    *   Credit: Python core development team.
+    *   Role: Creates the application window, buttons, inputs, and log display.
