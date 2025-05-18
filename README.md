@@ -34,7 +34,7 @@ Follow these simple steps to get the application running:
 
 ## Using the GUI
 
-*   **Select Files:** Use "Select Video File(s)" to add videos. "Clear List" removes them.
+*   **Select Files:** Use "Select Video File(s)" to add single/multiple videos or *batch* - folders containing videos. "Clear List" removes them.
 *   **Choose Options:**
     *   Select the **Model** and **Language**.
     *   Adjust **No Speech Threshold**.
