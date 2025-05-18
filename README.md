@@ -88,9 +88,9 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 
 ## Updates Log
 *   **V1.02** Added - Silent Thresholds options, merge duplicate subtitle along same segment
-*   **V1.05** Added - 
-- Improved Voice Activity Detection (VAD) Control: Enhanced the Voice Activity Detection feature for more flexible processing.
-- Multi-core Support for VAD Chunks: When VAD is enabled, the application now utilizes multiple CPU cores to transcribe speech segments in parallel, significantly speeding up processing on multi-core systems.
-- CPU Workers Option: Added a "CPU Workers (VAD Chunks)" option allowing users to specify the number of CPU cores to use for VAD-based transcription. Set to 0 for automatic detection (uses all available cores), 1 for serial processing, or a specific number up to your system's core count.
-- Dynamic UI: VAD-specific options (VAD Threshold, Min Speech, Min Silence, and CPU Workers) are now automatically shown when "Use Voice Activity Detection (VAD)" is checked and hidden when it's unchecked, simplifying the interface.
-- Enhanced Logging: Added more detailed logging for VAD processing when using multiple workers, providing better visibility into the progress of individual transcription tasks.
+*   **V1.05**
+-- Improved Voice Activity Detection (VAD) Control: Enhanced the Voice Activity Detection feature for more flexible processing.
+-- Multi-core Support for VAD Chunks: When VAD is enabled, the application now utilizes multiple CPU cores to transcribe speech segments in parallel, significantly speeding up processing on multi-core systems.
+-- CPU Workers Option: Added a "CPU Workers (VAD Chunks)" option allowing users to specify the number of CPU cores to use for VAD-based transcription. Set to 0 for automatic detection (uses all available cores), 1 for serial processing, or a specific number up to your system's core count.
+-- Dynamic UI: VAD-specific options (VAD Threshold, Min Speech, Min Silence, and CPU Workers) are now automatically shown when "Use Voice Activity Detection (VAD)" is checked and hidden when it's unchecked, simplifying the interface.
+-- Enhanced Logging: Added more detailed logging for VAD processing when using multiple workers, providing better visibility into the progress of individual transcription tasks.
