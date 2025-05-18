@@ -6,7 +6,7 @@ This application provides a user-friendly graphical interface for automatically 
 
 ## Overview
 
-The Auto Subtitle GUI is designed to make the process of subtitling videos straightforward. Unlike traditional setups that might require installing Python, specific libraries, and FFmpeg system-wide and managing complex PATH configurations, this portable version bundles everything you need.
+The Subtitles Generation GUI is a python-based, designed to make the process of subtitling videos straightforward. Unlike traditional setups that might require installing Python, specific libraries, and FFmpeg system-wide and managing complex PATH configurations, this portable version bundles everything you need.
 
 You simply unzip the package, run a setup script once, and then launch the GUI. The application automatically handles the complexities of calling the Whisper model via the `auto-subtitle` script and using FFmpeg for audio extraction, ensuring a smooth workflow even without prior technical setup.
 
