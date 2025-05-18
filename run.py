@@ -50,7 +50,7 @@ class SubtitleApp:
 
     def __init__(self, master):
         self.master = master
-        master.title("Auto Subtitle GUI (Portable FFmpeg)")
+        master.title("Auto Subtitle GUI (Portable) V1.0.6")
         master.geometry("700x870")
 
         self.video_files = []
