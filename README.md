@@ -34,10 +34,15 @@ Follow these simple steps to get the application running:
 
 ## Using the GUI
 
-*   **Selecting Files:** Click "Select Video File(s)" to browse and add videos to the list.
-*   **Choosing Options:** Select your desired Whisper model and the audio language. Choose the output folder for the SRT files.
-*   **Starting Processing:** Click "Start Processing". The log area will show progress.
-*   **Monitoring Progress:** The GUI's log window provides detailed output. If you ran `run.bat` from an existing command prompt, you will also see the progress printed there.
+*   **Select Files:** Use "Select Video File(s)" to add videos. "Clear List" removes them.
+*   **Choose Options:**
+    *   Select the **Model** and **Language**.
+    *   Adjust **No Speech Threshold**.
+    *   Toggle **Merge Repetitive Segments**.
+    *   Enable **Use Voice Activity Detection (VAD)** for VAD-specific settings (**VAD Threshold**, **Min Speech**, **Min Silence**, and **CPU Workers** for parallel processing).
+    *   Set the **SRT Output Dir**.
+*   **Start Processing:** Click "Start Processing".
+*   **Monitor Progress:** View progress and messages in the "Log Output" area within the GUI or in the command prompt where you launched the application.
 
 ## Model Downloading and Storage
 
