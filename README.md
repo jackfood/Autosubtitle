@@ -99,7 +99,7 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 
 ## Credits and Used Libraries
 
-This project is built upon the fantastic work of others. We extend our sincere thanks to the developers and communities behind the following key packages:
+This project is built upon the fantastic work of others. I extend my sincere thanks to the developers and communities behind the following key packages:
 
 *   **OpenAI Whisper:**
     *   The core of the transcription functionality is powered by OpenAI's state-of-the-art Whisper model.
