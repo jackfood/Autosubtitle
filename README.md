@@ -76,11 +76,6 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 *   **Direct SRT Output:** Generates standard `.srt` subtitle files compatible with most video players and editing software.
 *   **Real-time Logging:** View detailed processing status and progress updates within the GUI's log area and, if launched from a terminal, directly in the console.
 
-## Credits
-
-*   This GUI application is built upon the excellent `auto-subtitle` command-line script, which handles the core integration with Whisper and FFmpeg. Many thanks to the original `auto-subtitle` project and its contributors: **[https://github.com/m1guelpf/auto-subtitle](https://github.com/m1guelpf/auto-subtitle)**
-*   Audio processing relies on the powerful FFmpeg multimedia framework. A portable distribution of FFmpeg is included in this package for your convenience. **[https://ffmpeg.org/]**
-
 ## Additional Notes
 
 *   **CPU Performance:** As `torch` is configured for CPU-only processing, performance will be entirely dependent on your computer's processor speed. Transcription can be quite CPU-intensive, especially with larger models.
@@ -99,7 +94,14 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 
 ## Credits and Used Libraries
 
-This project is built upon the fantastic work of others. I extend my sincere thanks to the developers and communities behind the following key packages:
+This project is heavily influenced by and built upon the excellent **auto-subtitle** command-line script developed by m1guelpf. Many thanks to the original auto-subtitle project and its contributors for providing the core logic and integration with Whisper and FFmpeg.
+
+*   **auto-subtitle command-line script:**
+    *   The foundational command-line tool that this GUI wraps around.
+    *   Credit: m1guelpf and contributors (https://github.com/m1guelpf/auto-subtitle)
+    *   Role: Provides the core script for interacting with Whisper, VAD, and FFmpeg.
+
+I extend my sincere thanks to the developers and communities behind the following key packages:
 
 *   **OpenAI Whisper:**
     *   The core of the transcription functionality is powered by OpenAI's state-of-the-art Whisper model.
