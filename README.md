@@ -1,6 +1,6 @@
 # Subtitles Generation (SRT) for Videos (Whisper-based)
 ## Fully Portable, Offline, running on CPU
-V1.05 (With FFmpeg and packages installed)
+V1.06 (With FFmpeg and packages installed)
 
 This application provides a user-friendly graphical interface for automatically generating high-quality SRT subtitle files from video files. It leverages the power of cutting-edge Whisper model for transcription and translation, and includes all necessary components (Python environment, packages, and FFmpeg) for portability and ease of use.
 
@@ -96,6 +96,7 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 -- CPU Workers Option: Added a "CPU Workers (VAD Chunks)" option allowing users to specify the number of CPU cores to use for VAD-based transcription. Set to 0 for automatic detection (uses all available cores), 1 for serial processing, or a specific number up to your system's core count.
 -- Dynamic UI: VAD-specific options (VAD Threshold, Min Speech, Min Silence, and CPU Workers) are now automatically shown when "Use Voice Activity Detection (VAD)" is checked and hidden when it's unchecked, simplifying the interface.
 -- Enhanced Logging: Added more detailed logging for VAD processing when using multiple workers, providing better visibility into the progress of individual transcription tasks.
+*   **V1.06** Increased transcription stability by implementing a fallback mechanism for console character encoding issues during transcription by automatically disabling detailed progress output and replaced with a progress bar if an issue is detected.
 
 ## Credits and Used Libraries
 
