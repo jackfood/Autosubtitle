@@ -79,11 +79,22 @@ def transcribe_chunk_worker(args_tuple):
         print(f"ERROR [Worker PID {worker_pid}]: Transcription failed for VAD chunk starting at {chunk_start_sec_worker:.2f}s: {e}", file=sys.stderr, flush=True)
         return []
 
-
 def load_vad_model():
     global VAD_MODEL, VAD_UTILS
     if VAD_MODEL is None:
+        vad_model_storage_location_info = ""
         try:
+            current_file_dir = os.path.dirname(os.path.abspath(__file__))
+            scripts_dir_level = os.path.dirname(current_file_dir)
+            models_dir_for_hub_parent = os.path.join(scripts_dir_level, "models")
+            
+            os.makedirs(models_dir_for_hub_parent, exist_ok=True)
+            
+            torch.hub.set_dir(models_dir_for_hub_parent)
+            
+            vad_model_storage_location_info = os.path.join(models_dir_for_hub_parent, 'hub')
+            print(f"INFO: Silero VAD models will be checked/stored in: {vad_model_storage_location_info}", flush=True)
+
             torch.set_num_threads(1)
             model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
                                           model='silero_vad',
@@ -93,7 +104,8 @@ def load_vad_model():
             VAD_UTILS = utils
             print("INFO: Silero VAD model loaded successfully.", flush=True)
         except Exception as e:
-            print(f"ERROR: Could not load Silero VAD model: {e}. VAD will be disabled.", file=sys.stderr, flush=True)
+            detailed_error_msg = f"Attempted to use/create VAD model cache in: {vad_model_storage_location_info}" if vad_model_storage_location_info else "Path setup for VAD model cache failed."
+            print(f"ERROR: Could not load Silero VAD model: {e}. {detailed_error_msg}. VAD will be disabled.", file=sys.stderr, flush=True)
             VAD_MODEL = "error"
 
 def normalize_text_for_comparison(text: str) -> str:
