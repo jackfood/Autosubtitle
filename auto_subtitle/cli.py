@@ -42,9 +42,9 @@ def load_whisper_model_for_worker(model_name_worker: str, download_root_worker: 
             WHISPER_MODEL_WORKER = whisper.load_model(model_name_worker, download_root=download_root_worker)
             if torch.cuda.is_available():
                  WHISPER_MODEL_WORKER.cuda()
-            print(f"INFO [Worker PID {os.getpid()}]: Whisper model '{model_name_worker}' loaded.", flush=True)
+            print(f"INFO [Worker PID {os.getpid()}]: Whisper model '{sanitize_for_print(model_name_worker)}' loaded.", flush=True)
         except Exception as e:
-            print(f"ERROR [Worker PID {os.getpid()}]: Failed to load Whisper model '{model_name_worker}': {e}", file=sys.stderr, flush=True)
+            print(f"ERROR [Worker PID {os.getpid()}]: Failed to load Whisper model '{sanitize_for_print(model_name_worker)}': {sanitize_for_print(str(e))}", file=sys.stderr, flush=True)
             WHISPER_MODEL_WORKER = "error"
 
 def transcribe_chunk_worker(args_tuple):
@@ -76,7 +76,7 @@ def transcribe_chunk_worker(args_tuple):
         print(f"INFO [Worker PID {worker_pid}]: Processed {len(processed_segments)} segments for VAD chunk at {chunk_start_sec_worker:.2f}s.", flush=True)
         return processed_segments
     except Exception as e:
-        print(f"ERROR [Worker PID {worker_pid}]: Transcription failed for VAD chunk starting at {chunk_start_sec_worker:.2f}s: {e}", file=sys.stderr, flush=True)
+        print(f"ERROR [Worker PID {worker_pid}]: Transcription failed for VAD chunk starting at {chunk_start_sec_worker:.2f}s: {sanitize_for_print(str(e))}", file=sys.stderr, flush=True)
         return []
 
 def load_vad_model():
@@ -93,7 +93,7 @@ def load_vad_model():
             torch.hub.set_dir(models_dir_for_hub_parent)
             
             vad_model_storage_location_info = os.path.join(models_dir_for_hub_parent, 'hub')
-            print(f"INFO: Silero VAD models will be checked/stored in: {vad_model_storage_location_info}", flush=True)
+            print(f"INFO: Silero VAD models will be checked/stored in: {sanitize_for_print(vad_model_storage_location_info)}", flush=True)
 
             torch.set_num_threads(1)
             model, utils = torch.hub.load(repo_or_dir='snakers4/silero-vad',
@@ -105,7 +105,7 @@ def load_vad_model():
             print("INFO: Silero VAD model loaded successfully.", flush=True)
         except Exception as e:
             detailed_error_msg = f"Attempted to use/create VAD model cache in: {vad_model_storage_location_info}" if vad_model_storage_location_info else "Path setup for VAD model cache failed."
-            print(f"ERROR: Could not load Silero VAD model: {e}. {detailed_error_msg}. VAD will be disabled.", file=sys.stderr, flush=True)
+            print(f"ERROR: Could not load Silero VAD model: {sanitize_for_print(str(e))}. {sanitize_for_print(detailed_error_msg)}. VAD will be disabled.", file=sys.stderr, flush=True)
             VAD_MODEL = "error"
 
 def normalize_text_for_comparison(text: str) -> str:
@@ -128,7 +128,7 @@ def load_audio_for_vad(audio_path: str, target_sr: int = 16000) -> Optional[Tupl
             if waveform.ndim > 1 and waveform.shape[1] > 1 : waveform = torch.mean(waveform, dim=1)
             elif waveform.ndim > 1 and waveform.shape[1] == 1: waveform = waveform.squeeze(1)
         except Exception as e_sf:
-            print(f"INFO: soundfile failed to load {audio_path}: {e_sf}. Attempting torchaudio.", flush=True)
+            print(f"INFO: soundfile failed to load {sanitize_for_print(audio_path)}: {sanitize_for_print(str(e_sf))}. Attempting torchaudio.", flush=True)
             waveform = None
     if waveform is None and torchaudio:
         try:
@@ -136,10 +136,10 @@ def load_audio_for_vad(audio_path: str, target_sr: int = 16000) -> Optional[Tupl
             waveform = waveform_ta; sr = sr_ta
             if waveform.ndim > 1: waveform = torch.mean(waveform, dim=0)
         except Exception as e_ta:
-            print(f"ERROR: Both soundfile and torchaudio failed to load {audio_path}. soundfile: (see above), torchaudio: {e_ta}", file=sys.stderr, flush=True)
+            print(f"ERROR: Both soundfile and torchaudio failed to load {sanitize_for_print(audio_path)}. soundfile: (see above), torchaudio: {sanitize_for_print(str(e_ta))}", file=sys.stderr, flush=True)
             return None
     elif waveform is None and not torchaudio:
-        print(f"ERROR: soundfile failed and torchaudio is not available to load {audio_path}", file=sys.stderr, flush=True)
+        print(f"ERROR: soundfile failed and torchaudio is not available to load {sanitize_for_print(audio_path)}", file=sys.stderr, flush=True)
         return None
     if sr != target_sr and torchaudio and hasattr(torchaudio, 'transforms') and hasattr(torchaudio.transforms, 'Resample'):
         transform = torchaudio.transforms.Resample(orig_freq=sr, new_freq=target_sr)
@@ -165,7 +165,7 @@ def get_speech_timestamps_from_vad(
         )
         return speech_timestamps
     except Exception as e:
-        print(f"ERROR: VAD processing failed during speech timestamp detection: {e}", file=sys.stderr, flush=True)
+        print(f"ERROR: VAD processing failed during speech timestamp detection: {sanitize_for_print(str(e))}", file=sys.stderr, flush=True)
         return []
 
 def main():
@@ -209,7 +209,7 @@ def main():
     whisper_transcribe_options = args_dict.copy()
     
     if model_name.endswith(".en"):
-        warnings.warn(f"{model_name} is an English-only model, forcing English detection.")
+        warnings.warn(f"{sanitize_for_print(model_name)} is an English-only model, forcing English detection.")
         whisper_transcribe_options["language"] = "en"
     elif language != "auto": whisper_transcribe_options["language"] = language
     
@@ -227,30 +227,30 @@ def main():
     if srt_only: return
     for path, srt_path in subtitles.items():
         if not srt_path:
-            print(f"Skipping video overlay for {filename(path)} as no valid SRT was generated.", flush=True)
+            print(f"Skipping video overlay for {sanitize_for_print(filename(path))} as no valid SRT was generated.", flush=True)
             continue
         out_path = os.path.join(output_dir, f"{filename(path)}.mp4")
-        print(f"Adding subtitles to {filename(path)}...")
+        print(f"Adding subtitles to {sanitize_for_print(filename(path))}...")
         video = ffmpeg.input(path); audio = video.audio
         try:
             ffmpeg.concat(
                 video.filter('subtitles', srt_path, force_style="OutlineColour=&H40000000,BorderStyle=3"), audio, v=1, a=1
             ).output(out_path).run(cmd=ffmpeg_exec_path, quiet=True, overwrite_output=True)
-            print(f"Saved subtitled video to {os.path.abspath(out_path)}.")
+            print(f"Saved subtitled video to {sanitize_for_print(os.path.abspath(out_path))}.")
         except ffmpeg.Error as e:
-            print(f"Error during FFmpeg processing for {filename(path)}: {e.stderr.decode('utf8') if e.stderr else str(e)}", file=sys.stderr, flush=True)
-            print(f"Failed to add subtitles to {filename(path)}. SRT file may still be available at: {srt_path}", file=sys.stderr, flush=True)
+            print(f"Error during FFmpeg processing for {sanitize_for_print(filename(path))}: {e.stderr.decode('utf8') if e.stderr else sanitize_for_print(str(e))}", file=sys.stderr, flush=True)
+            print(f"Failed to add subtitles to {sanitize_for_print(filename(path))}. SRT file may still be available at: {sanitize_for_print(srt_path)}", file=sys.stderr, flush=True)
 
 def get_audio(paths: List[str], ffmpeg_cmd: str = "ffmpeg") -> Dict[str, str]:
     temp_dir = tempfile.gettempdir(); audio_paths: Dict[str, str] = {}
     for path in paths:
-        print(f"Extracting audio from {filename(path)}...")
+        print(f"Extracting audio from {sanitize_for_print(filename(path))}...")
         output_path = os.path.join(temp_dir, f"{filename(path)}.wav")
         try:
             ffmpeg.input(path).output(output_path, acodec="pcm_s16le", ac=1, ar="16k").run(cmd=ffmpeg_cmd, quiet=True, overwrite_output=True)
             audio_paths[path] = output_path
         except ffmpeg.Error as e:
-            print(f"Error extracting audio from {filename(path)}: {e.stderr.decode('utf8') if e.stderr else str(e)}", file=sys.stderr, flush=True)
+            print(f"Error extracting audio from {sanitize_for_print(filename(path))}: {e.stderr.decode('utf8') if e.stderr else sanitize_for_print(str(e))}", file=sys.stderr, flush=True)
             continue
     return audio_paths
 
@@ -264,20 +264,20 @@ def get_subtitles(
     
     for original_video_path, current_audio_path in audio_paths.items():
         target_srt_path = os.path.join(output_dir_path if output_srt_flag else tempfile.gettempdir(), f"{filename(original_video_path)}.srt")
-        print(f"Generating subtitles for {filename(original_video_path)}... This might take a while.", flush=True)
+        print(f"Generating subtitles for {sanitize_for_print(filename(original_video_path))}... This might take a while.", flush=True)
         all_transcribed_segments: List[Dict[str, Any]] = []
         use_vad_for_this_file = False
         full_waveform_for_vad = None
 
         if use_vad_processing and VAD_MODEL and VAD_UTILS:
-            if script_verbose_flag: print(f"INFO: Using Silero VAD for {filename(original_video_path)}.", flush=True)
+            if script_verbose_flag: print(f"INFO: Using Silero VAD for {sanitize_for_print(filename(original_video_path))}.", flush=True)
             (get_speech_timestamps_util, _, _, _, _) = VAD_UTILS
             loaded_audio_data = load_audio_for_vad(current_audio_path, SAMPLING_RATE)
             if loaded_audio_data:
                 full_waveform_for_vad, sr_for_vad = loaded_audio_data
                 use_vad_for_this_file = True
             else:
-                print(f"ERROR: VAD audio load failed for {filename(original_video_path)}. Skipping VAD for this file.", file=sys.stderr, flush=True)
+                print(f"ERROR: VAD audio load failed for {sanitize_for_print(filename(original_video_path))}. Skipping VAD for this file.", file=sys.stderr, flush=True)
 
             if use_vad_for_this_file and full_waveform_for_vad is not None:
                 speech_ts_from_vad = get_speech_timestamps_from_vad(
@@ -285,7 +285,7 @@ def get_subtitles(
                     vad_params["vad_threshold"], vad_params["min_speech_duration_ms"], vad_params["min_silence_duration_ms"]
                 )
                 if not speech_ts_from_vad:
-                    if script_verbose_flag: print(f"INFO: VAD found no speech in {filename(original_video_path)}.", flush=True)
+                    if script_verbose_flag: print(f"INFO: VAD found no speech in {sanitize_for_print(filename(original_video_path))}.", flush=True)
                 else:
                     if script_verbose_flag: print(f"INFO: VAD found {len(speech_ts_from_vad)} speech segments.", flush=True)
                     tasks_for_pool = []
@@ -315,11 +315,11 @@ def get_subtitles(
                                 for result_list in results_from_pool:
                                     all_transcribed_segments.extend(result_list)
                             except Exception as e_pool:
-                                print(f"ERROR: Multiprocessing pool failed for {filename(original_video_path)}: {e_pool}. Falling back to serial VAD processing for this file.", file=sys.stderr, flush=True)
+                                print(f"ERROR: Multiprocessing pool failed for {sanitize_for_print(filename(original_video_path))}: {sanitize_for_print(str(e_pool))}. Falling back to serial VAD processing for this file.", file=sys.stderr, flush=True)
                                 all_transcribed_segments = [] 
                                 use_vad_for_this_file = False 
                         else: 
-                            if script_verbose_flag: print(f"INFO: Processing {len(tasks_for_pool)} VAD tasks serially for {filename(original_video_path)}.", flush=True)
+                            if script_verbose_flag: print(f"INFO: Processing {len(tasks_for_pool)} VAD tasks serially for {sanitize_for_print(filename(original_video_path))}.", flush=True)
                             for i_task, task_args_serial in enumerate(tasks_for_pool):
                                 audio_np_s, _, _, opts_s, start_s_s = task_args_serial
                                 if script_verbose_flag: print(f"INFO: Serial VAD task {i_task+1}/{len(tasks_for_pool)} starting for chunk at {start_s_s:.2f}s", flush=True)
@@ -330,7 +330,7 @@ def get_subtitles(
                                 if script_verbose_flag: print(f"INFO: Serial VAD task {i_task+1}/{len(tasks_for_pool)} finished. Found {len(segs_s)} segments.", flush=True)
         
         if not use_vad_for_this_file: 
-            if script_verbose_flag: print(f"INFO: VAD not used for {filename(original_video_path)}. Transcribing full audio.", flush=True)
+            if script_verbose_flag: print(f"INFO: VAD not used for {sanitize_for_print(filename(original_video_path))}. Transcribing full audio.", flush=True)
             
             current_whisper_opts = whisper_options_base.copy()
             current_whisper_opts["verbose"] = True if script_verbose_flag else False
@@ -342,8 +342,8 @@ def get_subtitles(
                 all_transcribed_segments = transcription_result.get("segments", [])
             except UnicodeEncodeError:
                 if script_verbose_flag:
-                    print(f"INFO: Whisper's verbose output caused a UnicodeEncodeError for {filename(original_video_path)}.", flush=True)
-                    print(f"INFO: Retrying transcription for {filename(original_video_path)} with Whisper's internal verbose output disabled...", flush=True)
+                    print(f"INFO: Whisper's verbose output caused a UnicodeEncodeError for {sanitize_for_print(filename(original_video_path))}.", flush=True)
+                    print(f"INFO: Retrying transcription for {sanitize_for_print(filename(original_video_path))} with Whisper's internal verbose output disabled...", flush=True)
                 
                 current_whisper_opts["verbose"] = False 
                 try:
@@ -352,15 +352,15 @@ def get_subtitles(
                         transcription_result = main_whisper_model_obj.transcribe(current_audio_path, **current_whisper_opts)
                     all_transcribed_segments = transcription_result.get("segments", [])
                 except Exception as e_retry:
-                    print(f"ERROR: Transcription failed for {filename(original_video_path)} even after disabling verbose: {sanitize_for_print(str(e_retry))}", file=sys.stderr, flush=True)
+                    print(f"ERROR: Transcription failed for {sanitize_for_print(filename(original_video_path))} even after disabling verbose: {sanitize_for_print(str(e_retry))}", file=sys.stderr, flush=True)
                     all_transcribed_segments = []
             except Exception as e_initial:
-                print(f"ERROR: Transcription failed for {filename(original_video_path)}: {sanitize_for_print(str(e_initial))}", file=sys.stderr, flush=True)
+                print(f"ERROR: Transcription failed for {sanitize_for_print(filename(original_video_path))}: {sanitize_for_print(str(e_initial))}", file=sys.stderr, flush=True)
                 all_transcribed_segments = []
         
         speech_segments_after_silence_filter: List[Dict[str, Any]] = []
         if not all_transcribed_segments:
-            if script_verbose_flag: print(f"INFO: No segments transcribed for '{filename(original_video_path)}'.", flush=True)
+            if script_verbose_flag: print(f"INFO: No segments transcribed for '{sanitize_for_print(filename(original_video_path))}'.", flush=True)
         else:
             for segment in all_transcribed_segments:
                 seg_no_speech_p = segment.get("no_speech_prob", 0.0)
@@ -369,11 +369,11 @@ def get_subtitles(
                     if script_verbose_flag:
                         txt_prev = segment.get('text', '').strip()
                         txt_prev_display = (txt_prev[:27] + "...") if len(txt_prev) > 30 else txt_prev
-                        print(f"INFO: Skipping silent segment ({segment['start']:.2f}s-{segment['end']:.2f}s) for '{filename(original_video_path)}' (prob: {seg_no_speech_p:.2f} >= {no_speech_thresh_val:.2f}). Text: '{sanitize_for_print(txt_prev_display)}'", flush=True)
+                        print(f"INFO: Skipping silent segment ({segment['start']:.2f}s-{segment['end']:.2f}s) for '{sanitize_for_print(filename(original_video_path))}' (prob: {seg_no_speech_p:.2f} >= {no_speech_thresh_val:.2f}). Text: '{sanitize_for_print(txt_prev_display)}'", flush=True)
         
         if not speech_segments_after_silence_filter:
             if script_verbose_flag and len(all_transcribed_segments) > 0 : 
-                print(f"INFO: All segments for '{filename(original_video_path)}' were filtered by no-speech threshold or transcription failed. No SRT generated.", flush=True)
+                print(f"INFO: All segments for '{sanitize_for_print(filename(original_video_path))}' were filtered by no-speech threshold or transcription failed. No SRT generated.", flush=True)
             subtitles_path_map[original_video_path] = None 
             if os.path.exists(target_srt_path): 
                 try: os.remove(target_srt_path)
@@ -391,12 +391,12 @@ def get_subtitles(
                     last_add_seg['end'] = curr_seg['end'] 
                     if script_verbose_flag: 
                         text_content = curr_seg.get('text', '').strip()
-                        print(f"INFO: Merged repetitive segment ({curr_seg['start']:.2f}s-{curr_seg['end']:.2f}s) for '{filename(original_video_path)}'. Text: '{sanitize_for_print(text_content)}'", flush=True)
+                        print(f"INFO: Merged repetitive segment ({curr_seg['start']:.2f}s-{curr_seg['end']:.2f}s) for '{sanitize_for_print(filename(original_video_path))}'. Text: '{sanitize_for_print(text_content)}'", flush=True)
                 else: final_segments_to_write.append(dict(curr_seg)) 
         elif speech_segments_after_silence_filter: final_segments_to_write = [dict(s) for s in speech_segments_after_silence_filter] 
         
         if not final_segments_to_write:
-            if script_verbose_flag: print(f"INFO: No segments remaining for '{filename(original_video_path)}' after all processing. No SRT.", flush=True)
+            if script_verbose_flag: print(f"INFO: No segments remaining for '{sanitize_for_print(filename(original_video_path))}' after all processing. No SRT.", flush=True)
             subtitles_path_map[original_video_path] = None
             if os.path.exists(target_srt_path):
                 try: os.remove(target_srt_path)
