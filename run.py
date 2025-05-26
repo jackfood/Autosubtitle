@@ -32,9 +32,9 @@ DEFAULT_LANGUAGE_DISPLAY_NAME = "English"
 DEFAULT_NO_SPEECH_THRESHOLD = "0.6"
 DEFAULT_MERGE_REPETITIONS = True
 DEFAULT_USE_VAD = True
-DEFAULT_VAD_THRESHOLD = "0.5"
-DEFAULT_MIN_SPEECH_MS = "250"
-DEFAULT_MIN_SILENCE_MS = "100"
+DEFAULT_VAD_THRESHOLD = "0.4"
+DEFAULT_MIN_SPEECH_MS = "50"
+DEFAULT_MIN_SILENCE_MS = "500"
 try:
     _default_cpu_workers_val = os.cpu_count() // 2 if (os.cpu_count() or 0) > 1 else 1
     DEFAULT_NUM_WORKERS = str(_default_cpu_workers_val)
@@ -406,7 +406,9 @@ class SubtitleApp:
                     ffmpeg_bin_dir = os.path.dirname(FFMPEG_EXECUTABLE_PATH)
                     if "PATH" in process_env: process_env["PATH"] = ffmpeg_bin_dir + os.pathsep + process_env["PATH"]
                     else: process_env["PATH"] = ffmpeg_bin_dir
+                    process_env["PYTHONUTF8"] = "1" # Ensure subprocess Python uses UTF-8
                     self.log_message(f"DEBUG: Subprocess PATH will be prepended with: {ffmpeg_bin_dir}", "gray")
+                    self.log_message(f"DEBUG: Setting PYTHONUTF8=1 for subprocess.", "gray")
                     process = subprocess.Popen(
                         command, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True,
                         bufsize=1, cwd=VENV_SCRIPTS_DIR, creationflags=process_flags,
