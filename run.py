@@ -49,17 +49,17 @@ DEFAULT_OUTPUT_DIR = os.path.join(os.path.expanduser("~"), "Desktop")
 class SubtitleApp:
     def __init__(self, master):
         self.master = master
-        master.title("Auto Subtitle GUI (Portable) V1.0.8")
-        master.geometry("700x870")
+        master.title("Auto Subtitle GUI (Portable) V1.1")
+        master.geometry("700x900") 
 
         self.video_files = []
         self.processing_thread = None
         self.stop_event = threading.Event()
         self.pause_event = threading.Event()
-        self.pause_event.set() # Initially not paused (event is set)
+        self.pause_event.set() 
         self.current_process = None
         self.current_video_index = 0
-        self.is_processing = False # Overall state if a processing session is active
+        self.is_processing = False 
 
         file_frame = tk.Frame(master)
         file_frame.pack(pady=10, padx=10, fill=tk.X)
@@ -86,32 +86,40 @@ class SubtitleApp:
                                            values=AVAILABLE_MODELS_FROM_IMAGE, state="readonly", width=25)
         self.model_dropdown.grid(row=0, column=1, sticky=tk.EW, padx=5, pady=2, columnspan=2)
         
-        language_label = tk.Label(options_frame, text="Language:")
-        language_label.grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
-        self.language_var = tk.StringVar(master)
-        self.language_var.set(DEFAULT_LANGUAGE_DISPLAY_NAME)
-        self.language_dropdown = ttk.Combobox(options_frame, textvariable=self.language_var,
-                                              values=list(LANGUAGES_MAP.keys()), state="readonly", width=25)
-        self.language_dropdown.grid(row=1, column=1, sticky=tk.EW, padx=5, pady=2, columnspan=2)
+        transcription_language_label = tk.Label(options_frame, text="Transcription Language (Source):")
+        transcription_language_label.grid(row=1, column=0, sticky=tk.W, padx=5, pady=2)
+        self.transcription_language_var = tk.StringVar(master)
+        self.transcription_language_var.set(DEFAULT_LANGUAGE_DISPLAY_NAME)
+        self.transcription_language_dropdown = ttk.Combobox(options_frame, textvariable=self.transcription_language_var,
+                                                            values=list(LANGUAGES_MAP.keys()), state="readonly", width=25)
+        self.transcription_language_dropdown.grid(row=1, column=1, sticky=tk.EW, padx=5, pady=2, columnspan=2)
+
+        output_language_label = tk.Label(options_frame, text="Subtitle Language (Output):")
+        output_language_label.grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        self.output_language_var = tk.StringVar(master)
+        self.output_language_var.set(DEFAULT_LANGUAGE_DISPLAY_NAME)
+        self.output_language_dropdown = ttk.Combobox(options_frame, textvariable=self.output_language_var,
+                                                     values=list(LANGUAGES_MAP.keys()), state="readonly", width=25)
+        self.output_language_dropdown.grid(row=2, column=1, sticky=tk.EW, padx=5, pady=2, columnspan=2)
 
         no_speech_label = tk.Label(options_frame, text="No Speech Threshold (Whisper):")
-        no_speech_label.grid(row=2, column=0, sticky=tk.W, padx=5, pady=2)
+        no_speech_label.grid(row=3, column=0, sticky=tk.W, padx=5, pady=2)
         self.no_speech_threshold_var = tk.StringVar(master)
         self.no_speech_threshold_var.set(DEFAULT_NO_SPEECH_THRESHOLD)
         self.no_speech_threshold_entry = tk.Entry(options_frame, textvariable=self.no_speech_threshold_var, width=10)
-        self.no_speech_threshold_entry.grid(row=2, column=1, sticky=tk.W, padx=5, pady=2)
+        self.no_speech_threshold_entry.grid(row=3, column=1, sticky=tk.W, padx=5, pady=2)
         no_speech_tooltip = tk.Label(options_frame, text="(0.0-1.0, e.g., 0.6)", fg="grey")
-        no_speech_tooltip.grid(row=2, column=2, sticky=tk.W, padx=0, pady=2)
+        no_speech_tooltip.grid(row=3, column=2, sticky=tk.W, padx=0, pady=2)
 
         self.merge_repetitions_var = tk.BooleanVar(master)
         self.merge_repetitions_var.set(DEFAULT_MERGE_REPETITIONS)
         self.merge_repetitions_checkbox = tk.Checkbutton(options_frame, text="Merge Repetitive Segments", variable=self.merge_repetitions_var)
-        self.merge_repetitions_checkbox.grid(row=3, column=0, columnspan=3, sticky=tk.W, padx=5, pady=2)
+        self.merge_repetitions_checkbox.grid(row=4, column=0, columnspan=3, sticky=tk.W, padx=5, pady=2)
 
         self.use_vad_var = tk.BooleanVar(master)
         self.use_vad_var.set(DEFAULT_USE_VAD)
         self.use_vad_checkbox = tk.Checkbutton(options_frame, text="Use Voice Activity Detection (VAD)", variable=self.use_vad_var, command=self.toggle_vad_options)
-        self.use_vad_checkbox.grid(row=4, column=0, columnspan=3, sticky=tk.W, padx=5, pady=2)
+        self.use_vad_checkbox.grid(row=5, column=0, columnspan=3, sticky=tk.W, padx=5, pady=2)
 
         self.vad_options_frame = tk.Frame(options_frame)
         
@@ -138,7 +146,7 @@ class SubtitleApp:
         max_cores = os.cpu_count() or 1
         self.calculated_max_workers_for_spinbox = max_cores
         self.num_workers_label = tk.Label(options_frame, text="CPU Workers (VAD Chunks):")
-        self.num_workers_label.grid(row=6, column=0, sticky=tk.W, padx=5, pady=2)
+        self.num_workers_label.grid(row=7, column=0, sticky=tk.W, padx=5, pady=2) # Adjusted row
         initial_num_workers_val_str = DEFAULT_NUM_WORKERS
         initial_num_workers_val_int = int(initial_num_workers_val_str)
         final_default_num_workers = initial_num_workers_val_str
@@ -147,18 +155,18 @@ class SubtitleApp:
         self.num_workers_var = tk.StringVar(master, value=final_default_num_workers)
         self.num_workers_spinbox = tk.Spinbox(options_frame, from_=0, to=self.calculated_max_workers_for_spinbox,
                                               textvariable=self.num_workers_var, width=5, state="readonly")
-        self.num_workers_spinbox.grid(row=6, column=1, sticky=tk.W, padx=5, pady=2)
+        self.num_workers_spinbox.grid(row=7, column=1, sticky=tk.W, padx=5, pady=2) # Adjusted row
         self.num_workers_tooltip_label = tk.Label(options_frame, text=f"(0=auto, 1-core serial, max {max_cores} based on CPU)", fg="grey")
-        self.num_workers_tooltip_label.grid(row=6, column=2, sticky=tk.W, padx=0, pady=2)
+        self.num_workers_tooltip_label.grid(row=7, column=2, sticky=tk.W, padx=0, pady=2) # Adjusted row
 
         output_dir_label = tk.Label(options_frame, text="SRT Output Dir:")
-        output_dir_label.grid(row=7, column=0, sticky=tk.W, padx=5, pady=(10,2))
+        output_dir_label.grid(row=8, column=0, sticky=tk.W, padx=5, pady=(10,2)) # Adjusted row
         self.output_dir_var = tk.StringVar(master)
         self.output_dir_var.set(DEFAULT_OUTPUT_DIR)
         self.output_dir_entry = tk.Entry(options_frame, textvariable=self.output_dir_var, state="readonly", width=40)
-        self.output_dir_entry.grid(row=7, column=1, sticky=tk.EW, padx=5, pady=(10,2))
+        self.output_dir_entry.grid(row=8, column=1, sticky=tk.EW, padx=5, pady=(10,2)) # Adjusted row
         self.output_dir_button = tk.Button(options_frame, text="Browse...", command=self.select_output_dir)
-        self.output_dir_button.grid(row=7, column=2, sticky=tk.EW, padx=5, pady=(10,2))
+        self.output_dir_button.grid(row=8, column=2, sticky=tk.EW, padx=5, pady=(10,2)) # Adjusted row
         options_frame.columnconfigure(1, weight=1)
 
         self.file_listbox_label = tk.Label(master, text="Selected Files:")
@@ -203,16 +211,16 @@ class SubtitleApp:
         vad_tooltip_fg = "grey" if not self.is_processing else "lightgrey"
 
         if is_enabled:
-            self.vad_options_frame.grid(row=5, column=0, columnspan=3, sticky=tk.EW, padx=(20,5))
-            self.num_workers_label.grid(row=6, column=0, sticky=tk.W, padx=5, pady=2)
-            self.num_workers_spinbox.grid(row=6, column=1, sticky=tk.W, padx=5, pady=2)
-            self.num_workers_tooltip_label.grid(row=6, column=2, sticky=tk.W, padx=0, pady=2)
+            self.vad_options_frame.grid(row=6, column=0, columnspan=3, sticky=tk.EW, padx=(20,5)) # Adjusted row
+            self.num_workers_label.grid(row=7, column=0, sticky=tk.W, padx=5, pady=2) # Adjusted row
+            self.num_workers_spinbox.grid(row=7, column=1, sticky=tk.W, padx=5, pady=2) # Adjusted row
+            self.num_workers_tooltip_label.grid(row=7, column=2, sticky=tk.W, padx=0, pady=2) # Adjusted row
             
             for widget in self.vad_options_frame.winfo_children():
                 if isinstance(widget, (tk.Entry, tk.Checkbutton, tk.Button)):
                     widget.config(state=vad_controls_state)
-                elif isinstance(widget, tk.Label) and widget not in [self.num_workers_label, self.num_workers_tooltip_label]: # VAD specific labels
-                     pass # Keep labels enabled
+                elif isinstance(widget, tk.Label) and widget not in [self.num_workers_label, self.num_workers_tooltip_label]: 
+                     pass 
             self.num_workers_spinbox.config(state=vad_spinbox_state)
             self.num_workers_tooltip_label.config(fg=vad_tooltip_fg)
         else:
@@ -265,7 +273,7 @@ class SubtitleApp:
                 self.log_text.insert(tk.END, msg_str + ("" if no_newline else "\n"))
             self.log_text.see(tk.END)
             self.log_text.config(state=tk.DISABLED)
-        if self.master.winfo_exists(): # Avoid error if master is destroyed
+        if self.master.winfo_exists(): 
             self.master.after(0, _update_log)
 
     def select_files(self):
@@ -290,7 +298,7 @@ class SubtitleApp:
         self.video_files.clear()
         self.update_file_listbox()
         self.current_video_index = 0
-        self.start_pause_resume_button.config(text="Start Processing") # Reset button
+        self.start_pause_resume_button.config(text="Start Processing") 
         self.log_message("Cleared selected files list.")
 
     def update_file_listbox(self):
@@ -311,7 +319,8 @@ class SubtitleApp:
         self.use_vad_checkbox.config(state=tk_state)
         
         self.model_dropdown.config(state=combo_state)
-        self.language_dropdown.config(state=combo_state)
+        self.transcription_language_dropdown.config(state=combo_state)
+        self.output_language_dropdown.config(state=combo_state)
         
         self.toggle_vad_options()
 
@@ -321,7 +330,6 @@ class SubtitleApp:
             messagebox.showwarning("No Files", "Please select at least one video file.")
             return False
         
-        # Check if trying to start when all files are already processed from a previous run
         if self.current_video_index >= len(self.video_files) and self.start_pause_resume_button.cget('text') == "Start Processing":
              messagebox.showinfo("All Processed", "All files in the current list have been processed. Add more files or clear the list to start over.")
              return False
@@ -360,7 +368,7 @@ class SubtitleApp:
             if not self._validate_inputs():
                 return
             
-            if self.current_video_index >= len(self.video_files) and len(self.video_files) > 0: # If all files processed, reset index to start over
+            if self.current_video_index >= len(self.video_files) and len(self.video_files) > 0: 
                 self.current_video_index = 0
 
             self.is_processing = True
@@ -398,12 +406,12 @@ class SubtitleApp:
 
 
     def _handle_stop(self):
-        if not self.is_processing: # Should not happen if button is disabled, but a safeguard
+        if not self.is_processing: 
             return
 
         self.log_message("Stop requested. Attempting to terminate current task...", "red")
         self.stop_event.set()
-        self.pause_event.set() # Unblock pause_event.wait(), so thread can see stop_event
+        self.pause_event.set() 
 
         if self.current_process and self.current_process.poll() is None:
             try:
@@ -413,13 +421,11 @@ class SubtitleApp:
             except subprocess.TimeoutExpired:
                 self.log_message("Subprocess did not terminate gracefully, killing.", "red")
                 self.current_process.kill()
-                self.current_process.wait(timeout=2) # Wait for kill
+                self.current_process.wait(timeout=2) 
             except Exception as e:
                 self.log_message(f"Error during subprocess termination: {e}", "red")
             self.current_process = None
         
-        # The processing thread will eventually call _processing_finished to update UI fully.
-        # For immediate feedback, disable stop button, though _processing_finished will do it too.
         self.stop_button.config(state=tk.DISABLED)
 
 
@@ -438,7 +444,24 @@ class SubtitleApp:
             self.log_message(f"\nProcessing file {self.current_video_index + 1}/{len(self.video_files)}: {os.path.basename(video_file_path)}", "blue")
             
             selected_model_name = self.model_var.get()
-            selected_lang_code = LANGUAGES_MAP.get(self.language_var.get(), "en")
+            
+            selected_transcription_lang_name = self.transcription_language_var.get()
+            selected_output_lang_name = self.output_language_var.get()
+            
+            transcription_lang_code = LANGUAGES_MAP.get(selected_transcription_lang_name, "en")
+            output_lang_code = LANGUAGES_MAP.get(selected_output_lang_name, "en")
+
+            whisper_task_arg = "transcribe"
+            whisper_language_arg = transcription_lang_code
+
+            if transcription_lang_code != output_lang_code:
+                if output_lang_code == "en":
+                    whisper_task_arg = "translate"
+                else:
+                    self.log_message(f"Warning: Direct translation from '{selected_transcription_lang_name}' to '{selected_output_lang_name}' is not supported by Whisper's translate task (which only outputs English). " \
+                                     f"Subtitles will be generated by transcribing in the source language ('{selected_transcription_lang_name}').", "orange")
+                    whisper_task_arg = "transcribe" 
+            
             output_directory = self.output_dir_var.get()
             no_speech_threshold_setting = self.no_speech_threshold_var.get()
             merge_repetitions_setting = self.merge_repetitions_var.get()
@@ -458,7 +481,9 @@ class SubtitleApp:
 
             command = [
                 PYTHON_EXECUTABLE, "-u", "-m", "auto_subtitle.cli", video_file_path,
-                "--model", selected_model_name, "--language", selected_lang_code,
+                "--model", selected_model_name, 
+                "--language", whisper_language_arg,
+                "--task", whisper_task_arg,
                 "--output_dir", output_directory, "--srt_only", "True", "--output_srt", "True",
                 "--verbose", "True", "--ffmpeg_executable_path", FFMPEG_EXECUTABLE_PATH,
                 "--model_download_root", MODEL_CACHE_ROOT_DIR,
@@ -500,10 +525,10 @@ class SubtitleApp:
                 if self.current_process: 
                     self.current_process.stdout.close()
                     return_code = self.current_process.wait()
-                else: # Process was likely terminated by stop_event logic
-                    return_code = -99 # Indicate it was interrupted
+                else: 
+                    return_code = -99 
                 
-                self.current_process = None # Clear after it's done or terminated
+                self.current_process = None 
 
                 if self.stop_event.is_set(): 
                     self.log_message(f"Processing of {os.path.basename(video_file_path)} was stopped.", "orange")
@@ -523,7 +548,7 @@ class SubtitleApp:
             except Exception as e:
                 if self.current_process: 
                     try: self.current_process.kill(); self.current_process.wait(timeout=1)
-                    except: pass # Best effort
+                    except: pass 
                     self.current_process = None
                 
                 if self.stop_event.is_set():
@@ -545,7 +570,7 @@ class SubtitleApp:
             status_message = "Processing stopped by user."
         elif not self.pause_event.is_set() and self.current_video_index < len(self.video_files) and len(self.video_files) > 0 :
              status_message = f"Processing paused. {self.current_video_index} of {len(self.video_files)} files processed."
-             all_successful_session = True # Pausing is not an error state for the session
+             all_successful_session = True 
         elif self.current_video_index >= len(self.video_files) and len(self.video_files) > 0:
             status_message = "All files in the list have been processed." if all_successful_session else "Processing finished; some files may have had errors."
         elif not self.video_files:
@@ -567,9 +592,9 @@ class SubtitleApp:
         if self.stop_event.is_set():
             final_log_color = "red"
         elif not self.pause_event.is_set() and self.current_video_index < len(self.video_files) and len(self.video_files) > 0:
-             final_log_color = "orange" # Paused
+             final_log_color = "orange" 
         elif not session_success:
-             final_log_color = "red" # Errors occurred
+             final_log_color = "red" 
 
         self.log_message(status_message, final_log_color)
 
@@ -586,14 +611,14 @@ class SubtitleApp:
                 elif not session_success and self.current_video_index >= len(self.video_files):
                      messagebox.showerror("Error / Incomplete", status_message)
 
-            elif not self.pause_event.is_set() and self.current_video_index < len(self.video_files) and len(self.video_files) > 0 : # Paused mid-list
+            elif not self.pause_event.is_set() and self.current_video_index < len(self.video_files) and len(self.video_files) > 0 : 
                 self.start_pause_resume_button.config(text="Resume Processing")
                 messagebox.showinfo("Paused", status_message)
-            else: # Default to Start, e.g. if list is empty after processing
+            else: 
                  self.start_pause_resume_button.config(text="Start Processing")
-                 if not self.video_files and not self.stop_event.is_set(): # If list became empty
-                      pass # No specific message needed if list is empty now.
-                 elif not session_success and not self.stop_event.is_set(): # General error case not covered above
+                 if not self.video_files and not self.stop_event.is_set(): 
+                      pass 
+                 elif not session_success and not self.stop_event.is_set(): 
                       messagebox.showerror("Error / Incomplete", status_message)
 
 
@@ -625,7 +650,7 @@ if __name__ == "__main__":
                 app._handle_stop() 
                 if app.processing_thread and app.processing_thread.is_alive():
                     app.log_message("Waiting for processing thread to terminate before closing...", "orange")
-                    app.processing_thread.join(timeout=5) # Wait up to 5 seconds
+                    app.processing_thread.join(timeout=5) 
                 root.destroy()
             else:
                 return 
