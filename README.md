@@ -108,8 +108,8 @@ A user-friendly tool for converting video files, burning in subtitles, and contr
 
 *   **Video Conversion:** Convert videos between popular formats (MP4, MKV, MOV, WEBM).
 *   **Subtitle Handling:**
-    *   Burn in external SRT subtitles.
-    *   Select and extract embedded subtitles from MKV files for burning in.
+    *   Hardcode external SRT subtitles into videos.
+    *   Select and extract embedded subtitles from MKV files for Hardcode.
     *   Disable subtitles entirely.
 *   **Batch Processing:**  Process multiple videos from files or folders.
 *   **Target Size Control:** Set a desired output file size, and the software will attempt to adjust the output to match the target size.
