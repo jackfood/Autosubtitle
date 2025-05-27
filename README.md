@@ -98,6 +98,70 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 -- Enhanced Logging: Added more detailed logging for VAD processing when using multiple workers, providing better visibility into the progress of individual transcription tasks.
 *   **V1.06** Transcription Stability: Improved handling of console character encoding errors detected by the charmap codec during transcription. If a problem occurs, the script automatically disables Whisper's detailed verbose output for that file and continues processing with standard progress messages, increasing overall stability.
 *   **V1.07** Updated to dynamically determine ffmpeg_binary, models, and python executable paths relative to the script's location. The application now automatically finds where the FFmpeg tool, Whisper models, and Python are located, even if you move the folder.
+
+# Advanced Video Converter (Portable FFmpeg)- conversion.py
+Version 1.1
+
+A user-friendly tool for converting video files, burning in subtitles, and controlling output settings, all powered by a portable FFmpeg implementation.
+
+## Features
+
+*   **Video Conversion:** Convert videos between popular formats (MP4, MKV, MOV, WEBM).
+*   **Subtitle Handling:**
+    *   Burn in external SRT subtitles.
+    *   Select and extract embedded subtitles from MKV files for burning in.
+    *   Disable subtitles entirely.
+*   **Batch Processing:**  Process multiple videos from files or folders.
+*   **Target Size Control:** Set a desired output file size, and the software will attempt to adjust the output to match the target size.
+*   **Progress Tracking:** Monitor the progress of individual videos and the overall conversion process.
+*   **Portable Design:** Includes FFmpeg binaries for easy deployment (no separate FFmpeg installation required).
+
+## Prerequisites
+
+*   No separate installations are required.  Copy the conversion.py FFmpeg binaries are included in the `ffmpeg_binary/bin` subdirectory.
+
+## Getting Started
+
+1.  **Download:** Download the tool's package (source code or executable).
+2.  **Run:** Execute the main script (`.py` if using the source or the executable if provided).
+3.  **Interface:** The graphical user interface (GUI) will appear.
+
+## How to Use
+
+1.  **Select Input:**
+    *   Click "Select Video File(s)" to choose individual video files.
+    *   Click "Select Video Folder" to add all video files from a directory (including subdirectories).
+2.  **Review File List:** The selected videos will be displayed in the "Files to Process" list.
+    *   Use "Clear List" to remove all files.
+    *   Use "Remove Selected" to remove the highlighted file(s).
+3.  **Subtitle Configuration:** Select a video from list to configure subtitle options
+    * Choose subtitle options from combobox.
+4.  **Output Settings:**
+    *   **Output Directory:** Specify the folder where converted videos will be saved. Use the "Browse..." button.
+    *   **Output Format:** Choose the desired output format (MP4, MKV, MOV, WEBM) from the dropdown.
+    *   **Target Size (GB, optional):** Sets the desired output file size. The software will attempt to adjust the output to match the target size.
+5.  **Start Conversion:**
+    *   Click "Start Encoding" to begin.
+    *   Use "Pause/Resume" to temporarily pause and continue.
+    *   Use "Stop" to halt the process.
+6.  **Monitor Progress:** The "Process Log" displays messages, and progress bars show the conversion status.
+
+## Important Notes
+
+*   **FFmpeg Location:** The tool expects `ffmpeg.exe` and `ffprobe.exe` to be located in the `ffmpeg_binary/bin` subdirectory.  Ensure they are present.
+*   **Subtitle Encoding:** The tool attempts to handle different subtitle encodings, but issues may arise with uncommon or corrupted encodings.
+*   **Errors:** Check the "Process Log" for error messages if problems occur during conversion.
+
+## Troubleshooting
+
+*   **FFmpeg Errors:** If you receive FFmpeg-related errors, ensure that:
+    *   `ffmpeg.exe` and `ffprobe.exe` are in the `ffmpeg_binary/bin` directory.
+    *   The FFmpeg binaries are not corrupted.
+*   **Subtitle Issues:**
+    *   If subtitles are not displaying correctly, try different encoding options (if available) or ensure the SRT file is valid.
+*   **General Errors:** Check the "Process Log" for detailed error messages.
+
+## Updates Log
 *   **V1.1** For Conversion.py - Not longer needed srt to enable conversion. Added mkv embedded srt selection and conversion. Allows user selects output format.  Minor Fixed encoding error if srt is not English.
 
 
