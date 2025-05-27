@@ -1,4 +1,4 @@
-# conversion.py v1.1 - added mkv embedded srt selection and conversion. fixed encoding error if srt is not english
+# conversion.py v1.11
 
 import tkinter as tk
 from tkinter import filedialog, scrolledtext, ttk, messagebox
@@ -152,8 +152,8 @@ class VideoInfo:
 class HardcodeApp:
     def __init__(self, master):
         self.master = master
-        master.title("Advanced Video Converter (Portable FFmpeg) v1.07")
-        master.geometry("900x850")
+        master.title("Advanced Video Converter (Portable FFmpeg) v1.1")
+        master.geometry("900x860")
 
         self.selected_files_map = {}
         self.output_dir = tk.StringVar(value=os.path.join(os.path.expanduser("~"), "Desktop"))
@@ -187,79 +187,136 @@ class HardcodeApp:
         elif 'aqua' in available_themes and os.name == 'posix': self.style.theme_use('aqua')
         else: self.style.theme_use('default')
 
-        self.base_font_size = 10
+        self.base_font_size = 9
         self.base_font_family = 'Segoe UI' if os.name == 'nt' else 'Helvetica'
         self.style.configure('.', font=(self.base_font_family, self.base_font_size))
-        self.style.configure('TFrame', background='#ECECEC')
+
         self.master.configure(background='#ECECEC')
-        self.style.configure('TLabel', background='#ECECEC', padding=(5, 3))
-        self.style.configure('TLabelframe', background='#ECECEC', padding=10)
-        self.style.configure('TLabelframe.Label', font=(self.base_font_family, self.base_font_size + 1, 'bold'), background='#ECECEC', foreground='#003366')
-        self.style.configure('TButton', font=(self.base_font_family, self.base_font_size), padding=(10, 5))
-        self.style.configure('Small.TButton', font=(self.base_font_family, self.base_font_size-1), padding=(6,3))
-        self.style.configure('TEntry', font=(self.base_font_family, self.base_font_size), padding=(5,4))
-        self.style.configure('TCombobox', font=(self.base_font_family, self.base_font_size), padding=(5,4))
+        self.style.configure('TFrame', background='#ECECEC')
+
+        self.style.configure('TLabel', background='#ECECEC', padding=(5, 2))
+
+        self.style.configure('TLabelframe', background='#ECECEC', padding=(8, 4))
+        self.style.configure('TLabelframe.Label', font=(self.base_font_family, self.base_font_size + 1, 'bold'), background='#ECECEC', foreground='#003366', padding=(0,2))
+
+        self.style.configure('TButton', font=(self.base_font_family, self.base_font_size), padding=(8, 4))
+
+        self.style.configure('Small.TButton',
+                             font=(self.base_font_family, self.base_font_size),
+                             padding=(8, 3),
+                             borderwidth=1,
+                             relief='solid')
+        self.style.map('Small.TButton',
+                       relief=[('pressed', 'sunken'), ('!pressed', 'solid')])
+
+
+        self.style.configure('TEntry', font=(self.base_font_family, self.base_font_size), padding=(5,3))
+        self.style.configure('TCombobox', font=(self.base_font_family, self.base_font_size), padding=(5,3))
         self.style.map('TCombobox', fieldbackground=[('readonly', 'white')], selectbackground=[('readonly', 'white')], selectforeground=[('readonly', 'black')])
-        self.style.configure('Accent.TButton', font=(self.base_font_family, self.base_font_size, 'bold'))
+
         accent_bg_color = '#0078D4'; accent_fg_color = 'white'
+        self.style.configure('Accent.TButton', font=(self.base_font_family, self.base_font_size, 'bold'), padding=(10,5))
         try:
             self.style.map('Accent.TButton', background=[('active', '#005a9e'),('!disabled', accent_bg_color)], foreground=[('!disabled', accent_fg_color)])
         except tk.TclError:
             self.style.configure('Accent.TButton', background=accent_bg_color, foreground=accent_fg_color)
+
+        # Style for Pause Button (similar to Start Encoding)
+        pause_fg_color = accent_fg_color
+        pause_active_bg_color = '#005a9e' # Darker blue for active state
+        self.style.configure('Pause.TButton',
+                             font=(self.base_font_family, self.base_font_size),
+                             padding=(8, 3), # Same padding as Small.TButton
+                             borderwidth=1,
+                             relief='solid')
+        try:
+            self.style.map('Pause.TButton',
+                           background=[('active', pause_active_bg_color), ('!disabled', accent_bg_color)],
+                           foreground=[('!disabled', pause_fg_color)],
+                           relief=[('pressed', 'sunken'), ('!pressed', 'solid')])
+        except tk.TclError:
+            self.style.configure('Pause.TButton', background=accent_bg_color, foreground=pause_fg_color)
+
+
+        # Style for Stop Button (light red)
+        stop_bg_color = '#FF5252'  # A moderately light red
+        stop_fg_color = 'white'
+        stop_active_bg_color = '#E04848' # Darker red for active state
+        self.style.configure('Stop.TButton',
+                             font=(self.base_font_family, self.base_font_size),
+                             padding=(8, 3), # Same padding as Small.TButton
+                             borderwidth=1,
+                             relief='solid')
+        try:
+            self.style.map('Stop.TButton',
+                           background=[('active', stop_active_bg_color), ('!disabled', stop_bg_color)],
+                           foreground=[('!disabled', stop_fg_color)],
+                           relief=[('pressed', 'sunken'), ('!pressed', 'solid')])
+        except tk.TclError:
+            self.style.configure('Stop.TButton', background=stop_bg_color, foreground=stop_fg_color)
+
+
+        self.style.configure("Horizontal.TProgressbar", background=accent_bg_color, troughcolor='#E0E0E0')
+
         self.log_color_tags = {"green": "log_green", "red": "log_red", "orange": "log_orange", "blue": "log_blue", "purple": "log_purple", "gray": "log_gray", "ffmpeg_output": "ffmpeg_output"}
 
     def setup_ui(self):
-        main_content_frame = ttk.Frame(self.master, padding="15 15 15 15"); main_content_frame.pack(fill=tk.BOTH, expand=True)
-        input_frame = ttk.LabelFrame(main_content_frame, text="1. Select Input Files"); input_frame.pack(padx=0, pady=(0,10), fill=tk.X)
-        input_buttons_frame = ttk.Frame(input_frame); input_buttons_frame.pack(padx=5, pady=5, fill=tk.X)
-        btn_select_files = ttk.Button(input_buttons_frame, text="Select Video File(s)", command=self.select_video_files); btn_select_files.pack(side=tk.LEFT, padx=(0,5), pady=5)
-        btn_select_folder = ttk.Button(input_buttons_frame, text="Select Video Folder", command=self.select_video_folder); btn_select_folder.pack(side=tk.LEFT, padx=5, pady=5)
-        btn_clear_list = ttk.Button(input_buttons_frame, text="Clear List", command=self.clear_file_list); btn_clear_list.pack(side=tk.RIGHT, padx=(5,0), pady=5)
-        btn_remove_selected = ttk.Button(input_buttons_frame, text="Remove Selected", command=self.remove_selected_files); btn_remove_selected.pack(side=tk.RIGHT, padx=(5,0), pady=5)
-        
-        list_frame = ttk.LabelFrame(main_content_frame, text="2. Files to Process"); list_frame.pack(padx=0, pady=5, fill=tk.BOTH, expand=True)
-        self.file_listbox = tk.Listbox(list_frame, selectmode=tk.SINGLE, exportselection=False, font=(self.base_font_family, self.base_font_size), bg="white", fg="#333333", selectbackground="#0078d4", selectforeground="white", relief=tk.FLAT, borderwidth=0, highlightthickness=1, highlightbackground="#cccccc")
-        self.file_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=1, pady=1) 
+        main_content_frame = ttk.Frame(self.master, padding="10 10 10 10"); main_content_frame.pack(fill=tk.BOTH, expand=True)
+
+        input_frame = ttk.LabelFrame(main_content_frame, text="1. Select Input Files"); input_frame.pack(padx=0, pady=(0,8), fill=tk.X)
+        input_buttons_frame = ttk.Frame(input_frame); input_buttons_frame.pack(padx=5, pady=(2,5), fill=tk.X)
+
+        btn_select_files = ttk.Button(input_buttons_frame, text="Select Video File(s)", command=self.select_video_files, style='Small.TButton'); btn_select_files.pack(side=tk.LEFT, padx=(0,5), pady=2)
+        btn_select_folder = ttk.Button(input_buttons_frame, text="Select Video Folder", command=self.select_video_folder, style='Small.TButton'); btn_select_folder.pack(side=tk.LEFT, padx=5, pady=2)
+        btn_remove_selected = ttk.Button(input_buttons_frame, text="Remove Selected", command=self.remove_selected_files, style='Small.TButton'); btn_remove_selected.pack(side=tk.RIGHT, padx=(5,0), pady=2)
+        btn_clear_list = ttk.Button(input_buttons_frame, text="Clear List", command=self.clear_file_list, style='Small.TButton'); btn_clear_list.pack(side=tk.RIGHT, padx=(5,0), pady=2)
+
+        list_frame = ttk.LabelFrame(main_content_frame, text="2. Files to Process"); list_frame.pack(padx=0, pady=(4,8), fill=tk.BOTH, expand=True)
+        self.file_listbox = tk.Listbox(list_frame, selectmode=tk.SINGLE, exportselection=False, font=(self.base_font_family, self.base_font_size), bg="white", fg="#333333", selectbackground="#0078d4", selectforeground="white", relief=tk.FLAT, borderwidth=0, highlightthickness=1, highlightbackground="#cccccc", height=3)
+        self.file_listbox.pack(side=tk.LEFT, fill=tk.BOTH, expand=True, padx=1, pady=1)
         scrollbar = ttk.Scrollbar(list_frame, orient=tk.VERTICAL, command=self.file_listbox.yview); scrollbar.pack(side=tk.RIGHT, fill=tk.Y, padx=(0,1), pady=1)
         self.file_listbox.config(yscrollcommand=scrollbar.set)
         self.file_listbox.bind('<<ListboxSelect>>', self.on_file_list_select)
 
         self.subtitle_config_frame = ttk.LabelFrame(main_content_frame, text="Subtitle Configuration (for selected video)")
-        self.subtitle_config_frame.pack(padx=0, pady=(5,5), fill=tk.X)
+        self.subtitle_config_frame.pack(padx=0, pady=(4,4), fill=tk.X)
         self.subtitle_config_frame.grid_columnconfigure(1, weight=1)
         self.selected_video_for_sub_label = ttk.Label(self.subtitle_config_frame, text="No video selected.")
-        self.selected_video_for_sub_label.grid(row=0, column=0, columnspan=2, padx=5, pady=2, sticky=tk.W)
-        ttk.Label(self.subtitle_config_frame, text="Choose Subtitle:").grid(row=1, column=0, padx=5, pady=2, sticky=tk.W)
+        self.selected_video_for_sub_label.grid(row=0, column=0, columnspan=2, padx=5, pady=(2,0), sticky=tk.W)
+        ttk.Label(self.subtitle_config_frame, text="Choose Subtitle:").grid(row=1, column=0, padx=5, pady=(0,2), sticky=tk.W)
         self.subtitle_options_combo = ttk.Combobox(self.subtitle_config_frame, state="disabled", width=60)
-        self.subtitle_options_combo.grid(row=1, column=1, padx=5, pady=2, sticky=tk.EW)
+        self.subtitle_options_combo.grid(row=1, column=1, padx=5, pady=(0,2), sticky=tk.EW)
         self.subtitle_options_combo.bind('<<ComboboxSelected>>', self.on_subtitle_option_selected_ui)
 
-        output_settings_frame = ttk.LabelFrame(main_content_frame, text="3. Output Configuration"); output_settings_frame.pack(padx=0, pady=(5,10), fill=tk.X)
-        output_settings_frame.columnconfigure(1, weight=1) 
-        ttk.Label(output_settings_frame, text="Output Directory:").grid(row=0, column=0, padx=5, pady=(5,3), sticky=tk.W)
-        self.output_dir_entry = ttk.Entry(output_settings_frame, textvariable=self.output_dir); self.output_dir_entry.grid(row=0, column=1, padx=5, pady=(5,3), sticky=tk.EW)
-        btn_browse_output = ttk.Button(output_settings_frame, text="Browse...", command=self.select_output_dir, style='Small.TButton'); btn_browse_output.grid(row=0, column=2, padx=5, pady=(5,3), sticky=tk.E)
-        format_size_subframe = ttk.Frame(output_settings_frame); format_size_subframe.grid(row=1, column=0, columnspan=3, sticky=tk.EW, pady=(3,5))
+        output_settings_frame = ttk.LabelFrame(main_content_frame, text="3. Output Configuration"); output_settings_frame.pack(padx=0, pady=(4,8), fill=tk.X)
+        output_settings_frame.columnconfigure(1, weight=1)
+        ttk.Label(output_settings_frame, text="Output Directory:").grid(row=0, column=0, padx=5, pady=(2,1), sticky=tk.W)
+        self.output_dir_entry = ttk.Entry(output_settings_frame, textvariable=self.output_dir); self.output_dir_entry.grid(row=0, column=1, padx=5, pady=(2,1), sticky=tk.EW)
+        btn_browse_output = ttk.Button(output_settings_frame, text="Browse...", command=self.select_output_dir, style='Small.TButton'); btn_browse_output.grid(row=0, column=2, padx=5, pady=(2,1), sticky=tk.E)
+        format_size_subframe = ttk.Frame(output_settings_frame); format_size_subframe.grid(row=1, column=0, columnspan=3, sticky=tk.EW, pady=(1,2))
         ttk.Label(format_size_subframe, text="Output Format:").pack(side=tk.LEFT, padx=(5,2))
-        self.output_format_menu = ttk.Combobox(format_size_subframe, textvariable=self.output_format_var, values=list(self.output_formats.keys()), state="readonly", width=7); self.output_format_menu.pack(side=tk.LEFT, padx=(0,20)) 
+        self.output_format_menu = ttk.Combobox(format_size_subframe, textvariable=self.output_format_var, values=list(self.output_formats.keys()), state="readonly", width=7); self.output_format_menu.pack(side=tk.LEFT, padx=(0,20))
         ttk.Label(format_size_subframe, text="Target Size (GB, optional):").pack(side=tk.LEFT, padx=(0,2))
         self.target_size_entry = ttk.Entry(format_size_subframe, textvariable=self.target_size_gb_var, width=10); self.target_size_entry.pack(side=tk.LEFT, padx=0)
-        
-        control_frame_outer = ttk.LabelFrame(main_content_frame, text="4. Execution & Progress"); control_frame_outer.pack(padx=0, pady=5, fill=tk.X)
+
+        control_frame_outer = ttk.LabelFrame(main_content_frame, text="4. Execution & Progress"); control_frame_outer.pack(padx=0, pady=(4,8), fill=tk.X)
         buttons_frame = ttk.Frame(control_frame_outer, padding=(5,5)); buttons_frame.pack(fill=tk.X, expand=True)
         self.start_button = ttk.Button(buttons_frame, text="Start Encoding", command=self.start_encoding_thread, style='Accent.TButton'); self.start_button.pack(side=tk.LEFT, padx=(0,5))
-        self.pause_resume_button = ttk.Button(buttons_frame, text="Pause", command=self.toggle_pause_resume, state=tk.DISABLED); self.pause_resume_button.pack(side=tk.LEFT, padx=5)
-        self.stop_button = ttk.Button(buttons_frame, text="Stop", command=self.stop_processing_command, state=tk.DISABLED); self.stop_button.pack(side=tk.LEFT, padx=5)
-        current_video_progress_frame = ttk.Frame(control_frame_outer, padding=(5,2)); current_video_progress_frame.pack(fill=tk.X, expand=True, pady=(3,0))
+        # Apply new styles for Pause and Stop buttons
+        self.pause_resume_button = ttk.Button(buttons_frame, text="Pause", command=self.toggle_pause_resume, state=tk.DISABLED, style='Pause.TButton'); self.pause_resume_button.pack(side=tk.LEFT, padx=5)
+        self.stop_button = ttk.Button(buttons_frame, text="Stop", command=self.stop_processing_command, state=tk.DISABLED, style='Stop.TButton'); self.stop_button.pack(side=tk.LEFT, padx=5)
+
+        current_video_progress_frame = ttk.Frame(control_frame_outer, padding=(5,1)); current_video_progress_frame.pack(fill=tk.X, expand=True, pady=(2,0))
         ttk.Label(current_video_progress_frame, text="Current Video:", width=15, anchor=tk.W).pack(side=tk.LEFT, padx=(0,5))
         self.current_video_progress_bar = ttk.Progressbar(current_video_progress_frame, orient="horizontal", length=200, mode="determinate", maximum=100); self.current_video_progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
         current_video_text_label = ttk.Label(current_video_progress_frame, textvariable=self.current_video_progress_label_var, width=7, anchor=tk.E); current_video_text_label.pack(side=tk.LEFT, padx=(5,0))
-        overall_progress_frame = ttk.Frame(control_frame_outer, padding=(5,2)); overall_progress_frame.pack(fill=tk.X, expand=True, pady=(0,3))
+
+        overall_progress_frame = ttk.Frame(control_frame_outer, padding=(5,1)); overall_progress_frame.pack(fill=tk.X, expand=True, pady=(0,2))
         ttk.Label(overall_progress_frame, text="Overall Progress:", width=15, anchor=tk.W).pack(side=tk.LEFT, padx=(0,5))
         self.overall_progress_bar = ttk.Progressbar(overall_progress_frame, orient="horizontal", length=200, mode="determinate", maximum=100); self.overall_progress_bar.pack(side=tk.LEFT, fill=tk.X, expand=True)
         overall_text_label = ttk.Label(overall_progress_frame, textvariable=self.overall_progress_label_var, width=7, anchor=tk.E); overall_text_label.pack(side=tk.LEFT, padx=(5,0))
-        
-        log_frame = ttk.LabelFrame(main_content_frame, text="Process Log"); log_frame.pack(padx=0, pady=(10,0), fill=tk.BOTH, expand=True)
+
+        log_frame = ttk.LabelFrame(main_content_frame, text="Process Log"); log_frame.pack(padx=0, pady=(8,0), fill=tk.BOTH, expand=True)
         self.log_text = scrolledtext.ScrolledText(log_frame, height=6, wrap=tk.WORD, state=tk.DISABLED, font=('Consolas', self.base_font_size -1), relief=tk.FLAT, borderwidth=0, highlightthickness=1, highlightbackground="#cccccc", bg="white", fg="#333333", padx=5, pady=5)
         self.log_text.pack(fill=tk.BOTH, expand=True, padx=1, pady=1)
         self.log_text.tag_configure(self.log_color_tags["ffmpeg_output"], foreground="#777777")
