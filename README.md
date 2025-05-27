@@ -98,6 +98,8 @@ If you choose a different model (e.g., "base", "medium"), it will be downloaded 
 -- Enhanced Logging: Added more detailed logging for VAD processing when using multiple workers, providing better visibility into the progress of individual transcription tasks.
 *   **V1.06** Transcription Stability: Improved handling of console character encoding errors detected by the charmap codec during transcription. If a problem occurs, the script automatically disables Whisper's detailed verbose output for that file and continues processing with standard progress messages, increasing overall stability.
 *   **V1.07** Updated to dynamically determine ffmpeg_binary, models, and python executable paths relative to the script's location. The application now automatically finds where the FFmpeg tool, Whisper models, and Python are located, even if you move the folder.
+*   **V1.1** For Conversion.py - Not longer needed srt to enable conversion. Added mkv embedded srt selection and conversion. Allows user selects output format.  Minor Fixed encoding error if srt is not English.
+
 
 ## Credits and Used Libraries
 
